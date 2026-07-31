@@ -1,40 +1,37 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-<html>
-<head>
-    <title>Gastos</title>
-</head>
-<body>
 
-<h1>Listado de Gastos</h1>
+<h1 class="mb-4">📋 Listado de Gastos</h1>
 
-<table border="1">
+<table class="table table-striped table-hover">
 
-<tr>
-    <th>ID</th>
-    <th>Fecha</th>
-    <th>Descripción</th>
-    <th>Monto</th>
-    <th>Categoría</th>
-    <th>Responsable</th>
-    <th>Medio Pago</th>
-</tr>
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Monto</th>
+            <th>Categoría</th>
+            <th>Responsable</th>
+            <th>Medio Pago</th>
+        </tr>
+    </thead>
 
-{% for gasto in gastos %}
-<tr>
-    <td>{{ gasto.id }}</td>
-    <td>{{ gasto.fecha }}</td>
-    <td>{{ gasto.descripcion }}</td>
-    <td>{{ gasto.monto }}</td>
-    <td>{{ gasto.categoria }}</td>
-    <td>{{ gasto.responsable }}</td>
-    <td>{{ gasto.medio_pago }}</td>
-</tr>
-{% endfor %}
+    <tbody>
+        {% for gasto in gastos %}
+        <tr>
+            <td>{{ gasto.id }}</td>
+            <td>{{ gasto.fecha }}</td>
+            <td>{{ gasto.descripcion }}</td>
+            <td>${{ gasto.monto }}</td>
+            <td>{{ gasto.categoria }}</td>
+            <td>{{ gasto.responsable }}</td>
+            <td>{{ gasto.medio_pago }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
 
 </table>
 
-</body>
-</html>
 {% endblock %}
