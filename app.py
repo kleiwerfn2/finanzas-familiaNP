@@ -54,7 +54,7 @@ def nuevo_gasto():
 def listar_gastos():
 
     gastos = Gasto.query.order_by(Gasto.id.desc()).all()
-5   
+  
     return f"Cantidad de gastos: {len(gastos)}"
 
 
