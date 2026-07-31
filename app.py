@@ -54,9 +54,11 @@ def nuevo_gasto():
 def listar_gastos():
 
     gastos = Gasto.query.order_by(Gasto.id.desc()).all()
-  
-    return f"Cantidad de gastos: {len(gastos)}"
 
+    return render_template(
+        "gastos.html",
+        gastos=gastos
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
