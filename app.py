@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -27,6 +27,26 @@ with app.app_context():
 def home():
     return "<h1>Finanzas Familia NP</h1><p>Base de datos creada</p>"
 
+@app.route("/nuevo", methods=["GET", "POST"])
+def nuevo_gasto():
+
+    if request.method == "POST":
+
+        gasto = Gasto(
+            fecha=request.form["fecha"],
+            descripcion=request.form["descripcion"],
+            monto=float(request.form["monto"]),
+            categoria=request.form["categoria"],
+            responsable=request.form["responsable"],
+            medio_pago=request.form["medio_pago"]
+        )
+
+        db.session.add(gasto)
+        db.session.commit()
+
+        return "Gasto guardado correctamente"
+
+    return render_template("nuevo_gasto.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
