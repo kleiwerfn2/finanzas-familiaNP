@@ -27,6 +27,7 @@ with app.app_context():
 def home():
     return "<h1>Finanzas Familia NP</h1><p>Base de datos creada</p>"
 
+
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
 
@@ -47,6 +48,18 @@ def nuevo_gasto():
         return "Gasto guardado correctamente"
 
     return render_template("nuevo_gasto.html")
+
+
+@app.route("/gastos")
+def listar_gastos():
+
+    gastos = Gasto.query.order_by(Gasto.id.desc()).all()
+
+    return render_template(
+        "gastos.html",
+        gastos=gastos
+    )
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
