@@ -25,7 +25,7 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    return "<h1>Finanzas Familia NP</h1><p>Base de datos creada</p>"
+    return render_template("base.html")
 
 
 @app.route("/nuevo", methods=["GET", "POST"])
