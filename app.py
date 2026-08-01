@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///finanzas.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////app/data/finanzas.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
@@ -45,7 +45,7 @@ def nuevo_gasto():
         db.session.add(gasto)
         db.session.commit()
 
-        return "Gasto guardado correctamente"
+        return render_template("gasto_guardado.html")
 
     return render_template("nuevo_gasto.html")
 
