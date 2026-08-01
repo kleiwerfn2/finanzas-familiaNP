@@ -2,15 +2,18 @@
 
 {% block contenido %}
 
-<div class="row justify-content-center">
+<div class="row justify-content-center mt-5">
 
-    <div class="col-md-6">
+    <div class="col-md-8 col-lg-6">
 
-        <div class="card shadow">
+        <div class="card shadow border-0">
 
-            <div class="card-body text-center">
+            <div class="card-body text-center p-5">
+                <div style="font-size:70px">
+                    ✅
+                </div>
 
-                <h2 class="text-success">
+                <h2 class="text-success mt-3">
                     ✅ Gasto guardado correctamente
                 </h2>
 
@@ -18,19 +21,18 @@
                     ¿Qué deseas hacer ahora?
                 </p>
 
-                <div class="d-grid gap-2">
+                <hr>
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nuevo">
-                            ➕ Registrar otro gasto
-                        </a>
-                    </li>
+                <div class="d-grid gap-3">
 
-                    <li class="nav-item">
-                        <a class="nav-link" href="/gastos">
-                            📋 Ver todos los gastos
-                        </a>
-                    </li>
+                    <a class="nav-link" href="/nuevo">
+                        ➕ Registrar otro gasto
+                    </a>
+                    
+
+                    <a class="nav-link" href="/gastos">
+                          📋 Ver todos los gastos
+                     </a>
 
                 </div>
 
