@@ -96,7 +96,7 @@ def nuevo_gasto():
         gasto = Gasto(
             fecha=request.form["fecha"],
             descripcion=request.form["descripcion"],
-            monto=float(request.form["monto"]),
+            monto=float(request.form["monto"] or 0),
             categoria=request.form["categoria"],
             responsable=request.form["responsable"],
             medio_pago=request.form["medio_pago"]
@@ -105,7 +105,10 @@ def nuevo_gasto():
         db.session.add(gasto)
         db.session.commit()
 
-        return render_template("gasto_guardado.html")
+        return render_template(
+            "gasto_guardado.html",
+            ultimo_gasto=gasto
+        )
 
     return render_template("nuevo_gasto.html")
 
