@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 app = Flask(__name__)
 
@@ -8,6 +9,13 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
+@app.template_filter('moneda')
+def moneda(valor):
+
+    if valor is None:
+        return "0,00"
+
+    return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 class Gasto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -22,12 +30,64 @@ class Gasto(db.Model):
 with app.app_context():
     db.create_all()
 
-
 @app.route("/")
 def home():
-    return render_template("base.html")
+    total_gastado = db.session.query(
+        db.func.sum(Gasto.monto)
+    ).scalar()
+
+    if total_gastado is None:
+        total_gastado = 0
+
+    cantidad_gastos = Gasto.query.count()
+
+    ultimos_gastos = Gasto.query.order_by(
+        Gasto.id.desc()
+    ).limit(5).all()
 
 
+    gastos_categoria = db.session.query(
+        Gasto.categoria,
+    func.sum(Gasto.monto)
+    ).group_by(
+        Gasto.categoria
+    ).order_by(
+        func.sum(Gasto.monto).desc()
+    ).all()
+
+    gastos_responsable = db.session.query(
+        Gasto.responsable,
+        func.sum(Gasto.monto)
+    ).group_by(
+        Gasto.responsable
+    ).order_by(
+        func.sum(Gasto.monto).desc()
+    ).all()
+
+    gastos_medio_pago = db.session.query(
+        Gasto.medio_pago,
+        func.sum(Gasto.monto)
+    ).group_by(
+        Gasto.medio_pago
+    ).order_by(
+        func.sum(Gasto.monto).desc()
+    ).all() 
+
+    promedio_gasto = 0
+
+    if cantidad_gastos > 0:
+        promedio_gasto = total_gastado / cantidad_gastos
+
+    return render_template(
+        "home.html",
+        total_gastado=total_gastado,
+        cantidad_gastos=cantidad_gastos,
+        promedio_gasto=promedio_gasto,
+        ultimos_gastos=ultimos_gastos,
+        gastos_categoria=gastos_categoria,
+        gastos_responsable=gastos_responsable,
+        gastos_medio_pago=gastos_medio_pago
+    )                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
 

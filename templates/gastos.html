@@ -24,7 +24,7 @@
             <td>{{ gasto.id }}</td>
             <td>{{ gasto.fecha }}</td>
             <td>{{ gasto.descripcion }}</td>
-            <td>${{ gasto.monto }}</td>
+            <td>${{ gasto.monto | moneda }}</td>
             <td>{{ gasto.categoria }}</td>
             <td>{{ gasto.responsable }}</td>
             <td>{{ gasto.medio_pago }}</td>
