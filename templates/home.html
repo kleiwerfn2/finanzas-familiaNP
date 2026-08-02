@@ -130,11 +130,39 @@
 
         {% for item in gastos_categoria_pct %}
 
-        <tr>
+        <tr {% if loop.first %}class="table-warning"{% endif %}>
+            
             <td>{{ item.categoria }}</td>
-            <td>$ {{ item.total | moneda }}</td>
-            <td>{{ item.porcentaje  }}%</td>
+
+            <td>
+                $ {{ item.total | moneda }}
+            </td>
+
+            <td style="width: 300px;">
+
+                <div class="d-flex align-items-center">
+
+                    <div class="progress flex-grow-1 me-2">
+
+                        <div
+                            class="progress-bar bg-success"
+                            role="progressbar"
+                            style="width: {{ item.porcentaje }}%;">
+
+                        </div>
+
+                    </div>
+
+                    <strong>
+                        {{ item.porcentaje }}%
+                    </strong>
+
+                </div>
+
+            </td>
+
         </tr>
+
         {% endfor %}
 
     </tbody>
