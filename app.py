@@ -55,6 +55,23 @@ def home():
         func.sum(Gasto.monto).desc()
     ).all()
 
+    gastos_categoria_pct = []
+
+    for categoria, total in gastos_categoria:
+
+        porcentaje = 0
+
+        if total_gastado > 0:
+            porcentaje = round((total / total_gastado) * 100, 1)
+
+        gastos_categoria_pct.append(
+            {
+                "categoria": categoria,
+                "total": total,
+                "porcentaje": porcentaje
+            }
+        )
+
     gastos_responsable = db.session.query(
         Gasto.responsable,
         func.sum(Gasto.monto)
@@ -85,8 +102,10 @@ def home():
         promedio_gasto=promedio_gasto,
         ultimos_gastos=ultimos_gastos,
         gastos_categoria=gastos_categoria,
+        gastos_categoria_pct=gastos_categoria_pct,
         gastos_responsable=gastos_responsable,
         gastos_medio_pago=gastos_medio_pago
+        
     )                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():

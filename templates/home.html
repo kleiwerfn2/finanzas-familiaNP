@@ -2,13 +2,13 @@
 
 {% block contenido %}
 
-<h1 class="mb-4">
+<h1 class="display-5 fw-bold mb-4">
     💰 Dashboard Familiar
 </h1>
 
 <div class="row">
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
 
         <div class="card shadow">
 
@@ -16,7 +16,7 @@
 
                 <h5>Total Gastado</h5>
 
-                <h2>
+                <h2 class="text-success fw-bold">
                     $ {{ total_gastado | moneda }}
                 </h2>
 
@@ -26,7 +26,7 @@
 
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
 
         <div class="card shadow">
 
@@ -34,7 +34,7 @@
 
                 <h5>Cantidad Gastos</h5>
 
-                <h2>
+                <h2 class="text-primary fw-bold">
                     {{ cantidad_gastos }}
                 </h2>
 
@@ -44,7 +44,7 @@
 
     </div>
 
-    <div class="col-md-3 mb-3">
+    <div class="col-md-4 mb-3">
 
         <div class="card shadow">
 
@@ -52,7 +52,7 @@
 
                 <h5>Promedio</h5>
 
-                <h2>
+                <h2 class="text-warning fw-bold">
                     $ {{ promedio_gasto | moneda }}
                 </h2>
 
@@ -100,7 +100,7 @@
 
 </table>
 
-<h3 class="mt-5">📊 Gastos por Categoría</h3>
+<h3 class="mt-5">📊 Top por Categoría</h3>
 
 <table class="table table-striped table-hover shadow-sm">
 
@@ -108,6 +108,7 @@
         <tr>
             <th>Categoría</th>
             <th>Total</th>
+            <th>Porcentaje</th>
         </tr>
     </thead>
 
@@ -117,6 +118,7 @@
         <tr>
             <td>{{ categoria }}</td>
             <td>$ {{ total | moneda }}</td>
+            <td>{{ gastos_categoria_pct[categoria] | porcentaje }}</td>
         </tr>
         {% endfor %}
 
@@ -124,7 +126,7 @@
 
 </table>
 
-<h3 class="mt-5">👥 Gastos por Responsable</h3>
+<h3 class="mt-5">👥 Distribución por Responsable</h3>
 
 <table class="table table-striped table-hover shadow-sm">
 
@@ -148,7 +150,7 @@
 
 </table>
 
-<h3 class="mt-5">💳 Gastos por Medio de Pago</h3>
+<h3 class="mt-5">💳 Distribición por Medio de Pago</h3>
 
 <table class="table table-striped table-hover shadow-sm">
 
@@ -166,34 +168,6 @@
             <td>{{ medio_pago }}</td>
             <td>$ {{ total | moneda }}</td>
         </tr>
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
-        <tr>
-            <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Monto</th>
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-        {% for gasto in ultimos_gastos %}
-
-        <tr>
-
-            <td>{{ gasto.fecha }}</td>
-
-            <td>{{ gasto.descripcion }}</td>
-
-            <td>$ {{ gasto.monto | moneda }}</td>
-
-        </tr>
-
         {% endfor %}
 
     </tbody>
