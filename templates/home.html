@@ -106,19 +106,20 @@
 
     <thead>
         <tr>
-            <th>Categoría</th>
-            <th>Total</th>
+            <th>categoría</th>
+            <th>total</th>
             <th>Porcentaje</th>
         </tr>
     </thead>
 
     <tbody>
 
-        {% for categoria, total in gastos_categoria %}
+        {% for item in gastos_categoria_pct %}
+
         <tr>
-            <td>{{ Categoria }}</td>
-            <td>$ {{ Total | moneda }}</td>
-            <td>{{ Porcentaje }}%</td>
+            <td>{{ item.categoria }}</td>
+            <td>$ {{ item.total | moneda }}</td>
+            <td>{{ item.porcentaje  }}%</td>
         </tr>
         {% endfor %}
 
