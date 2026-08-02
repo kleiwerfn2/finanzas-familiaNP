@@ -116,9 +116,9 @@
 
         {% for categoria, total in gastos_categoria %}
         <tr>
-            <td>{{ categoria }}</td>
-            <td>$ {{ total | moneda }}</td>
-            <td>{{ gastos_categoria_pct[categoria] | porcentaje }}</td>
+            <td>{{ item.categoria }}</td>
+            <td>$ {{ item.total | moneda }}</td>
+            <td>{{ item.porcentaje }}%</td>
         </tr>
         {% endfor %}
 
