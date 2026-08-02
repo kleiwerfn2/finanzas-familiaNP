@@ -95,17 +95,32 @@ def home():
     if cantidad_gastos > 0:
         promedio_gasto = total_gastado / cantidad_gastos
 
+    categoria_mas_frecuente = None
+
+    if gastos_categoria_pct:
+
+        categoria_nombre = gastos_categoria_pct[0]["categoria"]
+
+        cantidad_movimientos = Gasto.query.filter(
+            Gasto.categoria == categoria_nombre
+        ).count()
+
+        categoria_mas_frecuente = {
+            "categoria": categoria_nombre,
+            "cantidad": cantidad_movimientos,
+            "porcentaje": gastos_categoria_pct[0]["porcentaje"]
+        }
+    
     return render_template(
         "home.html",
         total_gastado=total_gastado,
         cantidad_gastos=cantidad_gastos,
-        promedio_gasto=promedio_gasto,
         ultimos_gastos=ultimos_gastos,
         gastos_categoria=gastos_categoria,
         gastos_categoria_pct=gastos_categoria_pct,
         gastos_responsable=gastos_responsable,
-        gastos_medio_pago=gastos_medio_pago
-        
+        gastos_medio_pago=gastos_medio_pago,
+        categoria_mas_frecuente=categoria_mas_frecuente
     )                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():

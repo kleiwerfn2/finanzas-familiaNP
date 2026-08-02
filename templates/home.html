@@ -48,21 +48,35 @@
 
         <div class="card shadow">
 
-            <div class="card-body">
+            <div class="card-body text-center">
 
-                <h5>Promedio</h5>
+                <h5>🐜 Categoría Más Frecuente</h5>
 
-                <h2 class="text-warning fw-bold">
-                    $ {{ promedio_gasto | moneda }}
-                </h2>
+                {% if categoria_mas_frecuente %}
+
+                    <h3 class="text-danger fw-bold">
+                        {{ categoria_mas_frecuente.categoria }}
+                    </h3>
+
+                    <p class="mb-1">
+                        {{ categoria_mas_frecuente.cantidad }} gastos
+                    </p>
+
+                    <p class="fw-bold">
+                        {{ categoria_mas_frecuente.porcentaje }}% del gasto total
+                    </p>
+
+                {% else %}
+
+                    <h3>Sin datos</h3>
+
+                {% endif %}
 
             </div>
 
         </div>
 
     </div>
-
-</div>
 
 <h3 class="mt-4">
     📋 Últimos Gastos
