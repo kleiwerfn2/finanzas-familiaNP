@@ -261,7 +261,7 @@ def reportes():
         total_mes_actual=total_mes_actual,
         total_mes_anterior=total_mes_anterior,
         variacion=variacion,
-        gastos_por_mes=gastos_por_mes
+        gastos_por_mes=gastos_por_mes,
         categoria_mas_aumento=categoria_mas_aumento,
     )
 
