@@ -74,6 +74,17 @@
 
         {% if gastos.has_prev %}
 
+        <li class="page-item">
+
+            <a href ="/gastos?pagina={{ gastos.prev_num }}" class="page-link">
+
+                Anterior
+
+            </a>
+
+        </li>
+        {% endif %}
+
         <li class="page-item active">
 
             <a href="/gastos?pagina={{ gastos.page }}" class="page-link">
