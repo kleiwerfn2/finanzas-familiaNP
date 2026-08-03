@@ -139,5 +139,61 @@
 
 </table>
 
+<h3 class="mt-5">
+    📊 Comparativo por Categoría
+</h3>
+
+<table class="table table-striped table-hover shadow-sm">
+
+    <thead>
+        <tr>
+            <th>Categoría</th>
+            <th>Mes Anterior</th>
+            <th>Mes Actual</th>
+            <th>Variación</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for item in comparativo_categorias %}
+
+        <tr>
+
+            <td>{{ item.categoria }}</td>
+
+            <td>
+                $ {{ item.anterior | moneda }}
+            </td>
+
+            <td>
+                $ {{ item.actual | moneda }}
+            </td>
+
+            <td>
+
+                {% if item.variacion > 0 %}
+
+                    <span class="text-danger fw-bold">
+                        +{{ item.variacion }}%
+                    </span>
+
+                {% else %}
+
+                    <span class="text-success fw-bold">
+                        {{ item.variacion }}%
+                    </span>
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
 
 {% endblock %}
