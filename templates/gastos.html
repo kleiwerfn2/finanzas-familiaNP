@@ -74,7 +74,7 @@
 
             <a href ="/gastos?pagina={{ gastos.prev_num }}" class="page-link">
 
-                Anterior
+               <Anterior
 
             </a>
 
@@ -85,7 +85,8 @@
 
             <span href="/gastos?pagina={{ gastos.prev_num={{ orden }}&dir={{ direccion }}" 
 
-                Anterior
+                {{gastos.page}} 
+
             </span>
 
         </li>
@@ -96,10 +97,11 @@
 
             <a href="/gastos?pagina={{ gastos.next_num }}&orden={{ orden }}&dir={{ direccion }}" class="page-link">
 
-                Siguiente
+                Siguiente >
             </a>
 
         </li>
+
         {% endif %}
 
     </ul>
