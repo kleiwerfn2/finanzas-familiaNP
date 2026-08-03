@@ -64,4 +64,37 @@
 
 </div>
 
+<h3 class="mt-5">
+    📋 Gastos por Mes
+</h3>
+
+<table class="table table-striped table-hover shadow-sm">
+
+    <thead>
+        <tr>
+            <th>Mes</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        {% for mes, total in gastos_por_mes %}
+
+        <tr>
+
+            <td>{{ mes }}</td>
+
+            <td>
+                $ {{ total | moneda }}
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
 {% endblock %}

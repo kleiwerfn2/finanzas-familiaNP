@@ -110,7 +110,22 @@ def home():
             "cantidad": cantidad_movimientos,
             "porcentaje": gastos_categoria_pct[0]["porcentaje"]
         }
-    
+
+    gastos_por_mes = {}
+
+    for gasto in gastos:
+
+        mes = gasto.fecha[:7]
+
+        if mes not in gastos_por_mes:
+            gastos_por_mes[mes] = 0
+
+        gastos_por_mes[mes] += gasto.monto
+
+    gastos_por_mes = sorted(
+        gastos_por_mes.items(),
+        reverse=True
+    )
     return render_template(
         "home.html",
         total_gastado=total_gastado,
@@ -120,7 +135,8 @@ def home():
         gastos_categoria_pct=gastos_categoria_pct,
         gastos_responsable=gastos_responsable,
         gastos_medio_pago=gastos_medio_pago,
-        categoria_mas_frecuente=categoria_mas_frecuente
+        categoria_mas_frecuente=categoria_mas_frecuente,
+        gastos_por_mes=gastos_por_mes
     )                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
