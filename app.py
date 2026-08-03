@@ -110,6 +110,15 @@ def home():
             "cantidad": cantidad_movimientos,
             "porcentaje": gastos_categoria_pct[0]["porcentaje"]
         }
+    meses_disponibles = sorted(
+        list(
+            set(
+                gasto.fecha[:7]
+                for gasto in Gasto.query.all()
+            )
+        ),
+        reverse=True
+    )
 
     return render_template(
         "home.html",
@@ -121,6 +130,7 @@ def home():
         gastos_responsable=gastos_responsable,
         gastos_medio_pago=gastos_medio_pago,
         categoria_mas_frecuente=categoria_mas_frecuente,
+        meses_disponibles=meses_disponibles,
     ) 
                                                  
 @app.route("/nuevo", methods=["GET", "POST"])

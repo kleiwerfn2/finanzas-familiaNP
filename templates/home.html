@@ -2,9 +2,51 @@
 
 {% block contenido %}
 
-<h1 class="display-5 fw-bold mb-4">
-    💰 Dashboard Familiar
-</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h1 class="display-5 fw-bold mb-0">
+        💰 Dashboard Familiar
+    </h1>
+
+    <form method="get">
+
+        <select
+            class="form-select"
+            name="mes"
+            style="width: 220px;">
+
+            {% set nombres_meses = {
+                '01':'Enero',
+                '02':'Febrero',
+                '03':'Marzo',
+                '04':'Abril',
+                '05':'Mayo',
+                '06':'Junio',
+                '07':'Julio',
+                '08':'Agosto',
+                '09':'Septiembre',
+                '10':'Octubre',
+                '11':'Noviembre',
+                '12':'Diciembre'
+            } %}
+
+            {% for mes in meses_disponibles %}
+
+                {% set numero_mes = mes[5:7] %}
+
+                <option value="{{ mes }}">
+
+                    {{ nombres_meses[numero_mes] }}
+
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+    </form>
+
+</div>
 
 <div class="row">
 
