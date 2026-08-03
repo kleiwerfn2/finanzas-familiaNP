@@ -152,7 +152,6 @@ def home():
         categoria_mas_frecuente=categoria_mas_frecuente,
         meses_disponibles=meses_disponibles,
         mes_seleccionado=mes_seleccionado,
-        gastos=gastos,
     ) 
                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
