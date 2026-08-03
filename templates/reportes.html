@@ -170,9 +170,6 @@
             <th>Mes Anterior</th>
             <th>Mes Actual</th>
             <th>Diferencia $</th>
-            <td>
-                $ {{ item.diferencia | moneda }}
-            </td>
             <th>Variación</th>
         </tr>
     </thead>
@@ -193,6 +190,10 @@
                 $ {{ item.actual | moneda }}
             </td>
 
+            <td>
+                $ {{ item.diferencia | moneda }}
+            </td>
+            
             <td>
 
                 {% if item.variacion > 0 %}
