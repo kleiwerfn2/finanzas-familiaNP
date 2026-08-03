@@ -267,6 +267,7 @@ def reportes():
             1
         )  
     categoria_mas_aumento = None
+    comparativo_categorias = []
 
     if len(gastos_por_mes) >= 2:
 
@@ -322,51 +323,50 @@ def reportes():
                     "diferencia": diferencia,
                     "porcentaje": porcentaje
                 }
-                comparativo_categorias = []
 
-                if len(gastos_por_mes) >= 2:
+        todas_categorias = set(
+            list(categorias_actual.keys()) +
+            list(categorias_anterior.keys())
+        )
 
-                    todas_categorias = set(
-                        list(categorias_actual.keys()) +
-                        list(categorias_anterior.keys())
-                    )
+        for categoria in todas_categorias:
 
-                    for categoria in todas_categorias:
+            total_actual = categorias_actual.get(
+                categoria,
+                0
+            )
 
-                        total_actual = categorias_actual.get(
-                            categoria,
-                            0
-                        )
+            total_anterior = categorias_anterior.get(
+                categoria,
+                0
+            )
 
-                        total_anterior = categorias_anterior.get(
-                            categoria,
-                            0
-                        )
+            variacion_categoria = 0
 
-                        variacion_categoria = 0
+            if total_anterior > 0:
 
-                        if total_anterior > 0:
+                variacion_categoria = round(
+                    (
+                        (total_actual - total_anterior)
+                        / total_anterior
+                    ) * 100,
+                    1
+                )
 
-                            variacion_categoria = round(
-                                (
-                                    (total_actual - total_anterior)
-                                    / total_anterior
-                                ) * 100,
-                                1
-                            )
+            comparativo_categorias.append(
+                {
+                    "categoria": categoria,
+                    "actual": total_actual,
+                    "anterior": total_anterior,
+                    "variacion": variacion_categoria
+                }
+            )
 
-                        comparativo_categorias.append(
-                            {
-                                "categoria": categoria,
-                                "actual": total_actual,
-                                "anterior": total_anterior,
-                                "variacion": variacion_categoria
-                            }
-                        )
-    comparativo_categorias.sort(
-        key=lambda x: abs(x["variacion"]),
-        reverse=True
-    )
+        comparativo_categorias.sort(
+            key=lambda x: abs(x["variacion"]),
+            reverse=True
+        )
+
     return render_template(
         "reportes.html",
         total_mes_actual=total_mes_actual,
@@ -374,7 +374,7 @@ def reportes():
         variacion=variacion,
         gastos_por_mes=gastos_por_mes,
         categoria_mas_aumento=categoria_mas_aumento,
-        comparativo_categorias=comparativo_categorias,  
+        comparativo_categorias=comparativo_categorias,
     )
 
 if __name__ == "__main__":
