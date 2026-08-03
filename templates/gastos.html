@@ -10,10 +10,6 @@
         <tr>
 
             <th>
-                <a href="/gastos?orden=id&dir=asc" class="text-white text/a>
-            </th>
-
-            <th>
                 <a href="/gastos?orden=fecha&dir=asc" class="text-white text-decoration-none">
                     Fecha
                 </a>
@@ -87,11 +83,10 @@
 
         <li class="page-item active">
 
-            <a href="/gastos?pagina={{ gastos.page }}" class="page-link">
+            <span href="/gastos?pagina={{ gastos.prev_num={{ orden }}&dir={{ direccion }}" 
 
                 Anterior
- 
-            </a>
+            </span>
 
         </li>
 
@@ -99,10 +94,9 @@
 
         <li class="page-item">
 
-            <a href="/gastos?pagina={{ gastos.next_num }}" class="page-link">
+            <a href="/gastos?pagina={{ gastos.next_num }}&orden={{ orden }}&dir={{ direccion }}" class="page-link">
 
                 Siguiente
-
             </a>
 
         </li>
