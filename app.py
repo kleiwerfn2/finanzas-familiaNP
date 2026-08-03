@@ -198,13 +198,71 @@ def reportes():
                 / total_mes_anterior
             ) * 100,
             1
-        )   
+        )  
+    categoria_mas_aumento = None
+
+    if len(gastos_por_mes) >= 2:
+
+        mes_actual = gastos_por_mes[0][0]
+        mes_anterior = gastos_por_mes[1][0]
+
+        categorias_actual = {}
+        categorias_anterior = {}
+
+        for gasto in gastos:
+
+            mes = gasto.fecha[:7]
+
+            if mes == mes_actual:
+
+                categorias_actual[gasto.categoria] = (
+                    categorias_actual.get(gasto.categoria, 0)
+                    + gasto.monto
+                )
+
+            elif mes == mes_anterior:
+
+                categorias_anterior[gasto.categoria] = (
+                    categorias_anterior.get(gasto.categoria, 0)
+                    + gasto.monto
+                )
+
+        mayor_diferencia = 0
+
+        for categoria, total_actual in categorias_actual.items():
+
+            total_anterior = categorias_anterior.get(
+                categoria,
+                0
+            )
+
+            diferencia = total_actual - total_anterior
+
+            if diferencia > mayor_diferencia:
+
+                porcentaje = 100
+
+                if total_anterior > 0:
+                    porcentaje = round(
+                        (diferencia / total_anterior) * 100,
+                        1
+                    )
+
+                mayor_diferencia = diferencia
+
+                categoria_mas_aumento = {
+                    "categoria": categoria,
+                    "diferencia": diferencia,
+                    "porcentaje": porcentaje
+                }
+
     return render_template(
         "reportes.html",
         total_mes_actual=total_mes_actual,
         total_mes_anterior=total_mes_anterior,
         variacion=variacion,
         gastos_por_mes=gastos_por_mes
+        categoria_mas_aumento=categoria_mas_aumento,
     )
 
 if __name__ == "__main__":

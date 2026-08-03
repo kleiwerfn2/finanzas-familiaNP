@@ -8,7 +8,7 @@
 
 <div class="row">
 
-    <div class="col-md-4 mb-3">
+    <div class="col-lg-3 col-md-6 mb-3">
 
         <div class="card shadow h-100">
 
@@ -26,7 +26,7 @@
 
     </div>
 
-    <div class="col-md-4 mb-3">
+    <div class="col-lg-3 col-md-6 mb-3">
 
         <div class="card shadow h-100">
 
@@ -44,7 +44,7 @@
 
     </div>
 
-    <div class="col-md-4 mb-3">
+    <div class="col-lg-3 col-md-6 mb-3">
 
         <div class="card shadow h-100">
 
@@ -52,9 +52,55 @@
 
                 <h5>Variación</h5>
 
-                <h2>
+                <h2 class="{% if variacion > 0 %}text-danger{% else %}text-success{% endif %}">
                     {{ variacion }}%
                 </h2>
+                
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="row mt-3">
+
+    <div class="col-md-4">
+
+        <div class="card shadow h-100">
+
+            <div class="card-body text-center">
+
+                <h5>🔥 Categoría que más aumentó</h5>
+
+                {% if categoria_mas_aumento %}
+
+                    <h3 class="text-danger fw-bold">
+
+                        {{ categoria_mas_aumento.categoria }}
+
+                    </h3>
+
+                    <p class="mb-1">
+
+                        +$ {{ categoria_mas_aumento.diferencia | moneda }}
+
+                    </p>
+
+                    <p class="fw-bold">
+
+                        +{{ categoria_mas_aumento.porcentaje }}%
+
+                    </p>
+
+                {% else %}
+
+                    <p>
+                        Sin datos suficientes
+                    </p>
+
+                {% endif %}
 
             </div>
 
@@ -96,5 +142,6 @@
     </tbody>
 
 </table>
+
 
 {% endblock %}
