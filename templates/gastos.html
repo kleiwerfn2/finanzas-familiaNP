@@ -74,30 +74,28 @@
 
             <a href ="/gastos?pagina={{ gastos.prev_num }}" class="page-link">
 
-               <Anterior
+              ← Anterior
 
             </a>
 
         </li>
         {% endif %}
 
-        <li class="page-item active">
+        <li class="page-item disabled">
 
-            <span href="/gastos?pagina={{ gastos.prev_num={{ orden }}&dir={{ direccion }}" 
+            <a href="#" class="page-link">
 
-                {{gastos.page}} 
-
-            </span>
-
+                Página {{ gastos.page }} de {{ gastos.pages }}
+            </a>
         </li>
-
+        
         {% if gastos.has_next %}
 
         <li class="page-item">
 
             <a href="/gastos?pagina={{ gastos.next_num }}&orden={{ orden }}&dir={{ direccion }}" class="page-link">
 
-                Siguiente >
+                Siguiente
             </a>
 
         </li>
