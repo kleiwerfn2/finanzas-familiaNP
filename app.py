@@ -152,6 +152,7 @@ def home():
         categoria_mas_frecuente=categoria_mas_frecuente,
         meses_disponibles=meses_disponibles,
         mes_seleccionado=mes_seleccionado,
+        gastos=gastos,
     ) 
                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
@@ -178,15 +179,51 @@ def nuevo_gasto():
 
     return render_template("nuevo_gasto.html")
 
-
 @app.route("/gastos")
 def listar_gastos():
 
-    gastos = Gasto.query.order_by(Gasto.id.desc()).all()
+    orden = request.args.get(
+        "orden",
+        "id"
+    )
+
+    direccion = request.args.get(
+        "dir",
+        "desc"
+    )
+
+    columna = getattr(
+        Gasto,
+        orden,
+        Gasto.id
+    )
+
+    if direccion == "asc":
+        query = Gasto.query.order_by(
+            columna.asc()
+        )
+    else:
+        query = Gasto.query.order_by(
+            columna.desc()
+        )
+
+    pagina = request.args.get(
+        "pagina",
+        1,
+        type=int
+    )
+
+    gastos = query.paginate(
+        page=pagina,
+        per_page=15,
+        error_out=False
+    )
 
     return render_template(
         "gastos.html",
-        gastos=gastos
+        gastos=gastos,
+        orden=orden,
+        direccion=direccion
     )
 
 @app.route("/reportes")

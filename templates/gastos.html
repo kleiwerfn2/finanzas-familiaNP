@@ -8,30 +8,104 @@
 
     <thead class="table-dark">
         <tr>
-            <th>ID</th>
-            <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Monto</th>
-            <th>Categoría</th>
-            <th>Responsable</th>
-            <th>Medio Pago</th>
+
+            <th>
+                <a href="/gastos?orden=id&dir=asc" class="text-white text/a>
+            </th>
+
+            <th>
+                <aastos?orden=fecha&dir=asc
+                    Fecha
+                </a>
+            </th>
+
+            <th>
+                <a href="/gen=descripcion&dir=asc
+                    Descripción
+                </a>
+            </th>
+
+            <th>
+                /gastos?orden=monto&dir=desc
+                    Monto
+                </a>
+            </th>
+
+            <th>
+                <a href="/gastos?orden=categoria&dir=           Categoría
+                </a>
+            </th>
+
+            <th>
+                <a href="/gastos?orden=responsable&dir=asc"       Responsable
+                </a>
+            </th>
+
+            <th>
+                <a href="/gastos?orden=medio_pago&dir=           Medio Pago
+                </a>
+            </th>
+
         </tr>
     </thead>
 
-    <tbody>
-        {% for gasto in gastos %}
-        <tr>
-            <td>{{ gasto.id }}</td>
-            <td>{{ gasto.fecha }}</td>
-            <td>{{ gasto.descripcion }}</td>
-            <td>${{ gasto.monto | moneda }}</td>
-            <td>{{ gasto.categoria }}</td>
-            <td>{{ gasto.responsable }}</td>
-            <td>{{ gasto.medio_pago }}</td>
-        </tr>
+        <tbody>
+            {% for gasto in gastos.items %}
+            <tr>
+                <td>{{ gasto.id }}</td>
+                <td>{{ gasto.fecha }}</td>
+                <td>{{ gasto.descripcion }}</td>
+                <td>${{ gasto.monto | moneda }}</td>
+                <td>{{ gasto.categoria }}</td>
+                <td>{{ gasto.responsable }}</td>
+                <td>{{ gasto.medio_pago }}</td>
+            </tr>
         {% endfor %}
     </tbody>
 
 </table>
+
+<nav>
+
+    <ul class="pagination justify-content-center">
+
+        {% if gastos.has_prev %}
+        <li class="page-item">
+
+            <a
+                class="page-link}
+
+                Anterior
+
+            </a>
+
+        </li>
+        {% endif %}
+
+        <li class="page-item active">
+
+            <span class="page-link">
+
+                {{ gastos.page }}
+
+            </span>
+
+        </li>
+
+        {% if gastos.has_next %}
+        <li class="page-item">
+
+            <aastos?pagina={{ gastos.next_num }}
+
+                Siguiente
+
+            </a>
+
+        </li>
+        {% endif %}
+
+    </ul>
+
+</nav>
 
 {% endblock %}
