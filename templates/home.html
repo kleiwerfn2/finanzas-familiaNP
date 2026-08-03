@@ -1,24 +1,7 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-
-mes_seleccionado = request.args.get(
-    "mes",
-    "todos"
-)
-
-if mes_seleccionado == "todos":
-
-    gastos_query = Gasto.query
-
-else:
-
-    gastos_query = Gasto.query.filter(
-        Gasto.fecha.startswith(
-            mes_seleccionado
-        )
-    )
-    
+  
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <h1 class="display-5 fw-bold mb-0">
@@ -26,6 +9,13 @@ else:
     </h1>
 
     <form method="get">
+
+        <div class="text-end">
+
+            <label class="fw-bold mb-1">
+                    📅 Período
+            </label>
+        </div>
 
         <select
             class="form-select"

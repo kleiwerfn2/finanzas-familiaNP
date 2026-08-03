@@ -32,6 +32,24 @@ with app.app_context():
 
 @app.route("/")
 def home():
+
+    mes_seleccionado = request.args.get(
+        "mes",
+        "todos"
+    )
+
+    if mes_seleccionado == "todos":
+
+        gastos_query = Gasto.query
+
+    else:
+
+        gastos_query = Gasto.query.filter(
+            Gasto.fecha.startswith(
+                mes_seleccionado
+            )
+        )
+
     total_gastado = sum(
         gasto.monto
         for gasto in gastos_query.all()
@@ -103,7 +121,7 @@ def home():
 
         categoria_nombre = gastos_categoria_pct[0]["categoria"]
 
-        cantidad_movimientos = Gasto.query.filter(
+        cantidad_movimientos = gastos_query.filter(
             Gasto.categoria == categoria_nombre
         ).count()
 
