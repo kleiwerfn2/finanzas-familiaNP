@@ -56,7 +56,6 @@
         <tbody>
             {% for gasto in gastos.items %}
             <tr>
-                <td>{{ gasto.id }}</td>
                 <td>{{ gasto.fecha }}</td>
                 <td>{{ gasto.descripcion }}</td>
                 <td>${{ gasto.monto | moneda }}</td>
@@ -88,18 +87,19 @@
 
         <li class="page-item active">
 
-            <span class="page-link">
+            <a href="/gastos?pagina={{ gastos.page }}" class="page-link">
 
-                {{ gastos.page }}
+                Anterior
 
-            </span>
+            </a>
 
         </li>
 
         {% if gastos.has_next %}
+
         <li class="page-item">
 
-            <aastos?pagina={{ gastos.next_num }}
+            <a href="/gastos?pagina={{ gastos.next_num }}" class="page-link">
 
                 Siguiente
 
