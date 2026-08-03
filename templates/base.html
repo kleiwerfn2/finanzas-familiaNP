@@ -14,11 +14,14 @@
 
             .sidebar {
                 width: 260px;
+                min-height: 100vh;
+                background: #1e3a5f;
+                flex-shrink: 0;
                 transition: all 0.3s ease;
             }
 
             .sidebar-colapsado {
-                width: 80px;
+                width: 70px;
             }
 
             .sidebar-colapsado .texto-menu {
@@ -29,13 +32,18 @@
                 display: none;
             }
 
-            body{
-                background-color:#f5f6fa;
+            .sidebar-colapsado .nav-link {
+                text-align: center;
+                font-size: 1.3rem;
             }
 
-            .sidebar{
-                min-height:100vh;
-                background:#1e3a5f;
+            .sidebar-colapsado .pt-3 {
+                padding-left: 10px !important;
+                padding-right: 10px !important;
+            }
+
+            body{
+                background-color:#f5f6fa;
             }
 
             .sidebar .nav-link{
@@ -48,15 +56,9 @@
             }
 
             .content{
+                flex:1;
                 padding:20px;
-            }
-
-            .row{
-                flex-wrap: nowrap;
-            }
-
-            .sidebar{
-                flex-shrink: 0;
+                overflow-x:hidden;
             }
 
         </style>
@@ -82,15 +84,15 @@
 
     <div class="container-fluid">
 
-        <div class="row">
+        <div class="d-flex">
 
             <!-- MENU LATERAL -->
 
-            <nav class="col-md-2 d-md sidebar" id="sidebarMenu">
+            <nav class="sidebar" id="sidebarMenu">
 
                 <div class="pt-3 px-3">
 
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center justify-content-between">
 
                         <h4
                             class="text-white mb-0 texto-menu"
@@ -147,7 +149,7 @@
 
             <!-- CONTENIDO -->
 
-            <main id="contenidoPrincipal" class="content flex-grow-1">
+            <main id="contenidoPrincipal" class="content">
 
                 {% block contenido %}
                 {% endblock %}
