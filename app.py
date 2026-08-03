@@ -32,23 +32,25 @@ with app.app_context():
 
 @app.route("/")
 def home():
-    total_gastado = db.session.query(
-        db.func.sum(Gasto.monto)
-    ).scalar()
+    total_gastado = sum(
+        gasto.monto
+        for gasto in gastos_query.all()
+    )
 
     if total_gastado is None:
         total_gastado = 0
 
-    cantidad_gastos = Gasto.query.count()
+    cantidad_gastos = gastos_query.count()
 
-    ultimos_gastos = Gasto.query.order_by(
+    ultimos_gastos = gastos_query.order_by(
         Gasto.id.desc()
     ).limit(5).all()
 
 
-    gastos_categoria = db.session.query(
+    gastos_categoria = gastos_query.with_entities(
         Gasto.categoria,
     func.sum(Gasto.monto)
+
     ).group_by(
         Gasto.categoria
     ).order_by(
@@ -72,7 +74,7 @@ def home():
             }
         )
 
-    gastos_responsable = db.session.query(
+    gastos_responsable = gastos_query.with_entities(
         Gasto.responsable,
         func.sum(Gasto.monto)
     ).group_by(
@@ -81,7 +83,7 @@ def home():
         func.sum(Gasto.monto).desc()
     ).all()
 
-    gastos_medio_pago = db.session.query(
+    gastos_medio_pago = gastos_query.with_entities(
         Gasto.medio_pago,
         func.sum(Gasto.monto)
     ).group_by(
@@ -131,6 +133,7 @@ def home():
         gastos_medio_pago=gastos_medio_pago,
         categoria_mas_frecuente=categoria_mas_frecuente,
         meses_disponibles=meses_disponibles,
+        mes_seleccionado=mes_seleccionado,
     ) 
                                                  
 @app.route("/nuevo", methods=["GET", "POST"])

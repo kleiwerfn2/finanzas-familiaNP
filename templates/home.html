@@ -2,6 +2,23 @@
 
 {% block contenido %}
 
+mes_seleccionado = request.args.get(
+    "mes",
+    "todos"
+)
+
+if mes_seleccionado == "todos":
+
+    gastos_query = Gasto.query
+
+else:
+
+    gastos_query = Gasto.query.filter(
+        Gasto.fecha.startswith(
+            mes_seleccionado
+        )
+    )
+    
 <div class="d-flex justify-content-between align-items-center mb-4">
 
     <h1 class="display-5 fw-bold mb-0">
@@ -13,7 +30,19 @@
         <select
             class="form-select"
             name="mes"
-            style="width: 220px;">
+            onchange="this.form.submit()"
+            style="width: 240px;">
+
+            <option
+                value="todos"
+                {% if mes_seleccionado == 'todos' %}
+                selected
+                {% endif %}
+            >
+
+                📊 Todo el Historial
+
+            </option>
 
             {% set nombres_meses = {
                 '01':'Enero',
@@ -34,9 +63,14 @@
 
                 {% set numero_mes = mes[5:7] %}
 
-                <option value="{{ mes }}">
+                <option
+                    value="{{ mes }}"
+                    {% if mes == mes_seleccionado %}
+                    selected
+                    {% endif %}
+                >
 
-                    {{ nombres_meses[numero_mes] }}
+                    📅 {{ nombres_meses[numero_mes] }} {{ mes[:4] }}
 
                 </option>
 
