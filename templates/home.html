@@ -78,42 +78,6 @@
 
     </div>
 
-<h3 class="mt-4">
-    📋 Últimos Gastos
-</h3>
-
-<table class="table table-striped table-hover shadow-sm">
-
-    <thead>
-
-        <tr>
-            <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Monto</th>
-        </tr>
-
-    </thead>
-
-    <tbody>
-
-        {% for gasto in ultimos_gastos %}
-
-        <tr>
-
-            <td>{{ gasto.fecha }}</td>
-
-            <td>{{ gasto.descripcion }}</td>
-
-            <td>$ {{ gasto.monto | moneda }}</td>
-
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
 <h3 class="mt-5">📊 Top por Categoría</h3>
 
 <table class="table table-striped table-hover shadow-sm">
@@ -211,6 +175,41 @@
             <td>{{ medio_pago }}</td>
             <td>$ {{ total | moneda }}</td>
         </tr>
+        {% endfor %}
+
+    </tbody>
+
+</table>
+<h3 class="mt-4">
+    📋 Últimos Gastos
+</h3>
+
+<table class="table table-striped table-hover shadow-sm">
+
+    <thead>
+
+        <tr>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Monto</th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for gasto in ultimos_gastos %}
+
+        <tr>
+
+            <td>{{ gasto.fecha }}</td>
+
+            <td>{{ gasto.descripcion }}</td>
+
+            <td>$ {{ gasto.monto | moneda }}</td>
+
+        </tr>
+
         {% endfor %}
 
     </tbody>
