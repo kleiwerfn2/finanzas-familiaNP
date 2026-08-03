@@ -358,6 +358,7 @@ def reportes():
                     "categoria": categoria,
                     "actual": total_actual,
                     "anterior": total_anterior,
+                    "diferencia": total_actual - total_anterior,
                     "variacion": variacion_categoria
                 }
             )

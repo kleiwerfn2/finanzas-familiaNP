@@ -105,6 +105,20 @@
     </div>
 </div>
 
+{% set nombres_meses = {
+    '01':'Enero',
+    '02':'Febrero',
+    '03':'Marzo',
+    '04':'Abril',
+    '05':'Mayo',
+    '06':'Junio',
+    '07':'Julio',
+    '08':'Agosto',
+    '09':'Septiembre',
+    '10':'Octubre',
+    '11':'Noviembre',
+    '12':'Diciembre'
+} %}
 
 <h3 class="mt-5">
     📋 Gastos por Mes
@@ -125,7 +139,12 @@
 
         <tr>
 
-            <td>{{ mes }}</td>
+            <td>
+
+                {{ nombres_meses[mes[5:7]] }}
+                {{ mes[:4] }}
+
+            </td>
 
             <td>
                 $ {{ total | moneda }}
@@ -150,6 +169,10 @@
             <th>Categoría</th>
             <th>Mes Anterior</th>
             <th>Mes Actual</th>
+            <th>Diferencia $</th>
+            <td>
+                $ {{ item.diferencia | moneda }}
+            </td>
             <th>Variación</th>
         </tr>
     </thead>
