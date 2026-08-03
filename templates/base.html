@@ -42,23 +42,30 @@ src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.j
 </script>
 <body>
 
-<nav class="navbar navbar-dark bg-dark d-md-none">
+<script>
 
-    <div class="container-fluid">
+function toggleSidebar() {
 
-        <button
-            class="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#sidebarMenu">
+    const sidebar =
+        document.getElementById("sidebarMenu");
 
-            <span class="navbar-toggler-icon"></span>
+    sidebar.classList.toggle("d-none");
 
-        </button>
+}
 
-    </div>
+</script>
 
-</nav>
+<div class="p-2">
+
+    <button
+        class="btn btn-primary"
+        onclick="toggleSidebar()">
+
+        ☰ Menú
+
+    </button>
+
+</div>
 
 <div class="container-fluid">
 
@@ -66,7 +73,7 @@ src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.j
 
         <!-- MENU LATERAL -->
 
-        <nav class="col-md-2 d-md-block sidebar collapse show" id="sidebarMenu">
+        <nav class="col-md-2 d-md sidebar" id="sidebarMenu">
 
             <div class="pt-3 px-3">
 
