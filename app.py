@@ -161,14 +161,6 @@ def listar_gastos():
 @app.route("/reportes")
 def reportes():
 
-    total_mes_actual = total_gastado = db.session.query(
-        func.sum(Gasto.monto)
-    ).scalar() or 0
-
-    total_mes_anterior = 0
-
-    variacion = 0
-
     gastos = Gasto.query.all()
 
     gastos_por_mes = {}
@@ -187,6 +179,26 @@ def reportes():
         reverse=True
     )
 
+    total_mes_actual = 0
+    total_mes_anterior = 0
+
+    if len(gastos_por_mes) > 0:
+        total_mes_actual = gastos_por_mes[0][1]
+
+    if len(gastos_por_mes) > 1:
+        total_mes_anterior = gastos_por_mes[1][1]
+
+    variacion = 0
+
+    if total_mes_anterior > 0:
+
+        variacion = round(
+            (
+                (total_mes_actual - total_mes_anterior)
+                / total_mes_anterior
+            ) * 100,
+            1
+        )   
     return render_template(
         "reportes.html",
         total_mes_actual=total_mes_actual,
