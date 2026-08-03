@@ -157,5 +157,23 @@ def listar_gastos():
         gastos=gastos
     )
 
+@app.route("/reportes")
+def reportes():
+
+    total_mes_actual = total_gastado = db.session.query(
+        func.sum(Gasto.monto)
+    ).scalar() or 0
+
+    total_mes_anterior = 0
+
+    variacion = 0
+
+    return render_template(
+        "reportes.html",
+        total_mes_actual=total_mes_actual,
+        total_mes_anterior=total_mes_anterior,
+        variacion=variacion
+    )
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
