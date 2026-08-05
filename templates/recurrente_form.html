@@ -50,30 +50,36 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Categoría</label>
-                            <input type="text" 
-                                   name="categoria" 
-                                   class="form-control" 
-                                   placeholder="Ej: Servicios, Vivienda"
-                                   value="{{ recurrente.categoria if recurrente else '' }}" 
-                                   required>
+                            <select name="categoria" class="form-select" required>
+                                <option value="">Seleccionar...</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat }}" {{ 'selected' if recurrente and recurrente.categoria == cat else '' }}>
+                                        {{ cat }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Responsable</label>
-                            <input type="text" 
-                                   name="responsable" 
-                                   class="form-control" 
-                                   placeholder="Ej: Todos, Diego"
-                                   value="{{ recurrente.responsable if recurrente else '' }}" 
-                                   required>
+                            <select name="responsable" class="form-select" required>
+                                <option value="">Seleccionar...</option>
+                                {% for resp in responsables %}
+                                    <option value="{{ resp }}" {{ 'selected' if recurrente and recurrente.responsable == resp else '' }}>
+                                        {{ resp }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Medio de Pago</label>
-                            <input type="text" 
-                                   name="medio_pago" 
-                                   class="form-control" 
-                                   placeholder="Ej: Tarjeta Débito, Mercado Pago"
-                                   value="{{ recurrente.medio_pago if recurrente else '' }}" 
-                                   required>
+                            <select name="medio_pago" class="form-select" required>
+                                <option value="">Seleccionar...</option>
+                                {% for mp in medios_pago %}
+                                    <option value="{{ mp }}" {{ 'selected' if recurrente and recurrente.medio_pago == mp else '' }}>
+                                        {{ mp }}
+                                    </option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
 

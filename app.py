@@ -25,6 +25,7 @@ class Gasto(db.Model):
     categoria = db.Column(db.String(50))
     responsable = db.Column(db.String(50))
     medio_pago = db.Column(db.String(50))
+    gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True)
 
 class GastoRecurrente(db.Model):
 
@@ -388,37 +389,110 @@ def reportes():
         comparativo_categorias=comparativo_categorias,
     )
 
+# --- RUTAS DE GASTOS RECURRENTES ---
+
 @app.route("/recurrentes")
 def listar_recurrentes():
-
     recurrentes = GastoRecurrente.query.order_by(GastoRecurrente.descripcion).all()
+    return render_template("recurrentes.html", recurrentes=recurrentes)
 
-    return render_template("recurrentes.html",recurrentes=recurrentes)
-
-
-@app.route("/recurrentes/nuevo")
+@app.route("/recurrentes/nuevo", methods=["GET", "POST"])
 def nuevo_recurrente():
+    if request.method == "POST":
+        nuevo = GastoRecurrente(
+            descripcion=request.form["descripcion"],
+            categoria=request.form["categoria"],
+            monto=float(request.form["monto"] or 0),
+            responsable=request.form["responsable"],
+            medio_pago=request.form["medio_pago"],
+            dia_vencimiento=int(request.form["dia_vencimiento"])
+        )
+        db.session.add(nuevo)
+        db.session.commit()
+        return redirect(url_for("listar_recurrentes"))
 
-    return render_template("recurrente_form.html")
+    # Extraer opciones únicas guardadas previamente en la tabla Gasto
+    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+    responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
+    medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
 
+    return render_template(
+        "recurrente_form.html", 
+        recurrente=None,
+        categorias=categorias,
+        responsables=responsables,
+        medios_pago=medios_pago
+    )
 
-@app.route("/recurrentes/<int:id>/editar")
+@app.route("/recurrentes/<int:id>/editar", methods=["GET", "POST"])
 def editar_recurrente(id):
-
     recurrente = GastoRecurrente.query.get_or_404(id)
 
-    return render_template("recurrente_form.html",recurrente=recurrente)
+    if request.method == "POST":
+        recurrente.descripcion = request.form["descripcion"]
+        recurrente.categoria = request.form["categoria"]
+        recurrente.monto = float(request.form["monto"] or 0)
+        recurrente.responsable = request.form["responsable"]
+        recurrente.medio_pago = request.form["medio_pago"]
+        recurrente.dia_vencimiento = int(request.form["dia_vencimiento"])
+
+        db.session.commit()
+        return redirect(url_for("listar_recurrentes"))
+
+    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+    responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
+    medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
+
+    return render_template(
+        "recurrente_form.html", 
+        recurrente=recurrente,
+        categorias=categorias,
+        responsables=responsables,
+        medios_pago=medios_pago
+    )
 
 @app.route("/recurrentes/<int:id>/toggle")
 def toggle_recurrente(id):
-
     recurrente = GastoRecurrente.query.get_or_404(id)
-
     recurrente.activo = not recurrente.activo
+    db.session.commit()
+    return redirect(url_for("listar_recurrentes"))
+
+@app.route("/recurrentes/generar", methods=["POST"])
+def generar_gastos_mes():
+    from datetime import datetime
+    ahora = datetime.now()
+    mes_actual = ahora.strftime("%Y-%m")
+    
+    recurrentes_activos = GastoRecurrente.query.filter_eq(GastoRecurrente.activo == True).all()
+    generados = 0
+
+    for rec in recurrentes_activos:
+        # Armar la fecha estimada de vencimiento (YYYY-MM-DD)
+        dia_str = str(rec.dia_vencimiento).zfill(2)
+        fecha_gasto = f"{mes_actual}-{dia_str}"
+        
+        # Verificar si ya existe este gasto recurrente generado en el mes actual
+        existente = Gasto.query.filter(
+            Gasto.gasto_recurrente_id == rec.id,
+            Gasto.fecha.startswith(mes_actual)
+        ).first()
+
+        if not existente:
+            nuevo_gasto = Gasto(
+                fecha=fecha_gasto,
+                descripcion=rec.descripcion,
+                monto=rec.monto,
+                categoria=rec.categoria,
+                responsable=rec.responsable,
+                medio_pago=rec.medio_pago,
+                gasto_recurrente_id=rec.id
+            )
+            db.session.add(nuevo_gasto)
+            generados += 1
 
     db.session.commit()
-
-    return redirect(url_for("listar_recurrentes"))
+    return redirect(url_for("listar_gastos"))
 
 
 if __name__ == "__main__":
