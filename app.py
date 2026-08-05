@@ -395,10 +395,12 @@ def listar_recurrentes():
 
     return render_template("recurrentes.html",recurrentes=recurrentes)
 
+
 @app.route("/recurrentes/nuevo")
 def nuevo_recurrente():
 
     return render_template("recurrente_form.html")
+
 
 @app.route("/recurrentes/<int:id>/editar")
 def editar_recurrente(id):
@@ -416,7 +418,7 @@ def toggle_recurrente(id):
 
     db.session.commit()
 
-    return redirect(url_for("recurrentes"))
+    return redirect(url_for("listar_recurrentes"))
 
 
 if __name__ == "__main__":
