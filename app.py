@@ -470,7 +470,8 @@ def generar_gastos_mes():
     ahora = datetime.now()
     mes_actual = ahora.strftime("%Y-%m")
     
-    recurrentes_activos = GastoRecurrente.query.filter_eq(GastoRecurrente.activo == True).all()
+    # Se corrige filter_eq por filter (o filter_by)
+    recurrentes_activos = GastoRecurrente.query.filter(GastoRecurrente.activo == True).all()
     generados = 0
 
     for rec in recurrentes_activos:
