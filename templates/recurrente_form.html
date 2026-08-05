@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h1 class="mb-4">
+    ➕ Nuevo Gasto Recurrente
+</h1>
+
+<form>
+
+    <div class="mb-3">
+        <label class="form-label">
+            Descripción
+        </label>
+
+        <input type="text"
+               class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">
+            Monto
+        </label>
+
+        <input type="number"
+               class="form-control">
+    </div>
+
+    <button class="btn btn-success">
+        Guardar
+    </button>
+
+</form>
+
+{% endblock %}
+`

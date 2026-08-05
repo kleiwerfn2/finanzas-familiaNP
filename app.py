@@ -391,14 +391,33 @@ def reportes():
 @app.route("/recurrentes")
 def listar_recurrentes():
 
-    recurrentes = GastoRecurrente.query.order_by(
-        GastoRecurrente.descripcion
-    ).all()
+    recurrentes = GastoRecurrente.query.order_by(GastoRecurrente.descripcion).all()
 
-    return render_template(
-        "recurrentes.html",
-        recurrentes=recurrentes
-    )
+    return render_template("recurrentes.html",recurrentes=recurrentes)
+
+@app.route("/recurrentes/nuevo")
+def nuevo_recurrente():
+
+    return render_template("recurrente_form.html")
+
+@app.route("/recurrentes/<int:id>/editar")
+def editar_recurrente(id):
+
+    recurrente = GastoRecurrente.query.get_or_404(id)
+
+    return render_template("recurrente_form.html",recurrente=recurrente)
+
+@app.route("/recurrentes/<int:id>/toggle")
+def toggle_recurrente(id):
+
+    recurrente = GastoRecurrente.query.get_or_404(id)
+
+    recurrente.activo = not recurrente.activo
+
+    db.session.commit()
+
+    return redirect(url_for("recurrentes"))
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
