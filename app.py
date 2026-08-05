@@ -26,6 +26,7 @@ class Gasto(db.Model):
     responsable = db.Column(db.String(50))
     medio_pago = db.Column(db.String(50))
     gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True)
+    pagado = db.Column(db.Boolean, default=False)  
     # Relación para acceder directamente al objeto recurrente desde el gasto
     recurrente = db.relationship('GastoRecurrente', backref='gastos_generados', lazy=True)
 
@@ -395,8 +396,26 @@ def reportes():
 
 @app.route("/recurrentes")
 def listar_recurrentes():
+    from datetime import datetime
+    mes_actual = datetime.now().strftime("%Y-%m")
+    
     recurrentes = GastoRecurrente.query.order_by(GastoRecurrente.descripcion).all()
-    return render_template("recurrentes.html", recurrentes=recurrentes)
+    
+    # 1. Buscamos solo los gastos reales cargados en el mes actual
+    gastos_mes = Gasto.query.filter(Gasto.fecha.startswith(mes_actual)).all()
+    
+    # 2. Armamos dos diccionarios para saber rápido en la plantilla:
+    # - ¿Qué gasto recurrente ya se generó este mes?
+    # - ¿Está pagado o no?
+    pagados_mes_ids = {g.gasto_recurrente_id: g.pagado for g in gastos_mes if g.gasto_recurrente_id}
+    generados_mes_ids = {g.gasto_recurrente_id: g.id for g in gastos_mes if g.gasto_recurrente_id}
+
+    return render_template(
+        "recurrentes.html", 
+        recurrentes=recurrentes,
+        pagados_mes_ids=pagados_mes_ids,
+        generados_mes_ids=generados_mes_ids
+    )
 
 @app.route("/recurrentes/nuevo", methods=["GET", "POST"])
 def nuevo_recurrente():
@@ -501,7 +520,14 @@ def generar_gastos_mes():
             generados += 1
 
     db.session.commit()
-    return redirect(url_for("listar_gastos"))
+    
+@app.route("/gastos/<int:id>/toggle-pago")
+def toggle_pago_gasto(id):
+    gasto = Gasto.query.get_or_404(id)
+    gasto.pagado = not gasto.pagado
+    db.session.commit()
+    # Redirige a la página desde donde vino la petición
+    return redirect(request.referrer or url_for("listar_gastos"))
 
 
 if __name__ == "__main__":

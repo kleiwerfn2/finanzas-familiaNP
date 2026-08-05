@@ -66,6 +66,17 @@
                 <td>{{ gasto.categoria }}</td>
                 <td>{{ gasto.responsable }}</td>
                 <td>{{ gasto.medio_pago }}</td>
+                <td>
+                    {% if gasto.pagado %}
+                        <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success">
+                            ✅ Pagado
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-warning">
+                            ⏳ Pendiente
+                        </a>
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
     </tbody>
