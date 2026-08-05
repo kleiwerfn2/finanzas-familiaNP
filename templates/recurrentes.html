@@ -44,15 +44,11 @@
 
             <td>{{ recurrente.categoria }}</td>
 
-            <td>
-                $ {{ recurrente.monto | moneda }}
-            </td>
+            <td>$ {{ recurrente.monto | moneda }}</td>
 
             <td>{{ recurrente.responsable }}</td>
 
-            <td>
-                Día {{ recurrente.dia_vencimiento }}
-            </td>
+            <td>Día {{ recurrente.dia_vencimiento }}</td>
 
             <td>
 
@@ -70,14 +66,15 @@
 
             <td>
 
-                <a href="{{ url_for('recurrentes.editar', id=recurrente.id) }}" class="btn btn-sm btn-primary">
+                <a href="{{ url_for('recurrentes.editar', id=recurrente.id) }}">
 
                     Editar
 
                 </a>
 
-                <a href="{{ url_for('recurrentes.toggle', id=recurrente.id, activo=recurrente.activo) }}">
-                    
+                <a href="{{ url_for('recurrentes.toggle', id=recurrente.id) }}">
+
+                    {% if recurrente.activo %}
                         Desactivar
                     {% else %}
                         Activar
