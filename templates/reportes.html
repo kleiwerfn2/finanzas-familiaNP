@@ -178,7 +178,7 @@
 
         {% for item in comparativo_categorias %}
 
-        <tr>
+        <tr {% if loop.first %}class="table-warning"{% endif %}>
 
             <td>{{ item.categoria }}</td>
 
@@ -193,7 +193,7 @@
             <td>
                 $ {{ item.diferencia | moneda }}
             </td>
-            
+
             <td>
 
                 {% if item.variacion > 0 %}

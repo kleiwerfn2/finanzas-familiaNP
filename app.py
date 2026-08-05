@@ -26,6 +26,16 @@ class Gasto(db.Model):
     responsable = db.Column(db.String(50))
     medio_pago = db.Column(db.String(50))
 
+class GastoRecurrente(db.Model):
+
+    id = db.Column(db.Integer,primary_key=True)
+    descripcion = db.Column(db.String(200),nullable=False)
+    categoria = db.Column(db.String(100),nullable=False)
+    monto = db.Column(db.Float,nullable=False)
+    responsable = db.Column(db.String(100),nullable=False)
+    medio_pago = db.Column(db.String(100),nullable=False)
+    dia_vencimiento = db.Column(db.Integer,nullable=False)
+    activo = db.Column(db.Boolean,default=True)
 
 with app.app_context():
     db.create_all()
@@ -376,6 +386,18 @@ def reportes():
         gastos_por_mes=gastos_por_mes,
         categoria_mas_aumento=categoria_mas_aumento,
         comparativo_categorias=comparativo_categorias,
+    )
+
+@app.route("/recurrentes")
+def listar_recurrentes():
+
+    recurrentes = GastoRecurrente.query.order_by(
+        GastoRecurrente.descripcion
+    ).all()
+
+    return render_template(
+        "recurrentes.html",
+        recurrentes=recurrentes
     )
 
 if __name__ == "__main__":

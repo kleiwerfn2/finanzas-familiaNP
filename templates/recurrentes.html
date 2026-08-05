@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h1 class="mb-4">
+    🔁 Gastos Recurrentes
+</h1>
+
+<table class="table table-striped table-hover">
+
+    <thead class="table-dark">
+
+        <tr>
+
+            <th>Descripción</th>
+            <th>Categoría</th>
+            <th>Monto</th>
+            <th>Responsable</th>
+            <th>Vence</th>
+            <th>Activo</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for recurrente in recurrentes %}
+
+        <tr>
+
+            <td>{{ recurrente.descripcion }}</td>
+
+            <td>{{ recurrente.categoria }}</td>
+
+            <td>
+                $ {{ recurrente.monto | moneda }}
+            </td>
+
+            <td>{{ recurrente.responsable }}</td>
+
+            <td>
+                Día {{ recurrente.dia_vencimiento }}
+            </td>
+
+            <td>
+
+                {% if recurrente.activo %}
+
+                    ✅
+
+                {% else %}
+
+                    ❌
+
+                {% endif %}
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% endblock %}
