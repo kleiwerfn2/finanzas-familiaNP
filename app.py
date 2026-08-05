@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 
@@ -412,7 +412,12 @@ def nuevo_recurrente():
         return redirect(url_for("listar_recurrentes"))
 
     # Extraer opciones únicas guardadas previamente en la tabla Gasto
-    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+    # Lista predeterminada combinada con las existentes en la base de datos
+    categorias_base = ["Vivienda", "Servicios", "Alimentación", "Transporte", "Entretenimiento", "Salud"]
+    categorias_db = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+
+    # Unir ambas listas sin repetir elementos
+    categorias = sorted(list(set(categorias_base + categorias_db)))
     responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
     medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
 
@@ -439,6 +444,7 @@ def editar_recurrente(id):
         db.session.commit()
         return redirect(url_for("listar_recurrentes"))
 
+    # Carga de listas para el GET
     categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
     responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
     medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
