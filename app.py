@@ -26,6 +26,8 @@ class Gasto(db.Model):
     responsable = db.Column(db.String(50))
     medio_pago = db.Column(db.String(50))
     gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True)
+    # Relación para acceder directamente al objeto recurrente desde el gasto
+    recurrente = db.relationship('GastoRecurrente', backref='gastos_generados', lazy=True)
 
 class GastoRecurrente(db.Model):
 

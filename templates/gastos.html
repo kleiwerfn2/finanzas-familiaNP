@@ -54,6 +54,14 @@
             <tr>
                 <td>{{ gasto.fecha }}</td>
                 <td>{{ gasto.descripcion }}</td>
+                <td>
+                    <strong>{{ gasto.descripcion }}</strong>
+                    {% if gasto.gasto_recurrente_id %}
+                        <span class="badge bg-info text-dark ms-1" title="Gasto generado automáticamente desde Recurrentes">
+                            🔁 Recurrente
+                        </span>
+                    {% endif %}
+                </td>
                 <td>${{ gasto.monto | moneda }}</td>
                 <td>{{ gasto.categoria }}</td>
                 <td>{{ gasto.responsable }}</td>
