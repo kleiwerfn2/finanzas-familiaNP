@@ -39,28 +39,24 @@ class GastoRecurrente(db.Model):
     dia_vencimiento = db.Column(db.Integer, nullable=False)
     activo = db.Column(db.Boolean, default=True)
 
-class Categoria(db.Model):
-    id = db.Column(db.Integer, primary_primary_key=True)
-    nombre = db.Column(db.String(50), unique=True, nullable=False)
-
-    def __repr__(self):
-        return f'<Categoria {self.nombre}>'
-
 with app.app_context():
     db.create_all()
 
 # --- FUNCIÓN AUXILIAR DRY PARA OPCIONES DE FORMULARIO ---
 def obtener_opciones():
-    categorias_db = [c.nombre for c in Categoria.query.order_by(Categoria.nombre.asc()).all()]
-    
-    # Lista de respaldo si la tabla está vacía
-    if not categorias_db:
-        categorias_db = ["Supermercado", "Restaurante", "Servicios", "Transporte", "Gastos Personales"]
+    cat_base = ["Supermercado", "Restaurante", "Alquiler", "Agua", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales"]
+    resp_base = ["Joffan", "Dore"]
+    medios_base = ["BBVA Master", "BBVA Visa", "Santander Visa", "Santander American", "Transferencia Galicia", "Transferencia Santander", "Transferencia BBVA", "Mercado Pago", "Efectivo"]
 
-    responsables = ["Joffan", "Dore"]
-    medios_pago = ["Efectivo", "Débito", "Crédito", "Mercado Pago"]
+    cat_db = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+    resp_db = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
+    medios_db = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
 
-    return categorias_db, responsables, medios_pago
+    return {
+        "categorias": sorted(list(set(cat_base + cat_db))),
+        "responsables": sorted(list(set(resp_base + resp_db))),
+        "medios_pago": sorted(list(set(medios_base + medios_db)))
+    }
 
 @app.route("/")
 def home():
@@ -390,6 +386,7 @@ def toggle_pago_gasto(id):
     db.session.commit()
     return redirect(request.referrer or url_for("listar_gastos"))
 
+
 @app.route('/rapido', methods=['GET', 'POST'])
 def carga_rapida():
     if request.method == 'POST':
@@ -433,20 +430,6 @@ def carga_rapida():
         responsables=sorted(responsables),
         medios_pago=sorted(medios_pago)
     )
-
-@app.route('/categorias', methods=['GET', 'POST'])
-def gestionar_categorias():
-    if request.method == 'POST':
-        nueva_cat = request.form.get('nombre', '').strip()
-        if nueva_cat:
-            cat_existente = Categoria.query.filter(Categoria.nombre.ilike(nueva_cat)).first()
-            if not cat_existente:
-                db.session.add(Categoria(nombre=nueva_cat))
-                db.session.commit()
-        return redirect(url_for('gestionar_categorias'))
-
-    categorias = Categoria.query.order_by(Categoria.nombre.asc()).all()
-    return render_template('categorias.html', categorias=categorias)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
