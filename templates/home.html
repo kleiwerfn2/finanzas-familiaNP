@@ -85,8 +85,18 @@
     </div>
 </div>
 
+<script id="chart-data" type="application/json">
+{
+  "cat_labels": {{ cat_labels | tojson }},
+  "cat_totals": {{ cat_totals | tojson }},
+  "mes_labels": {{ mes_labels | tojson }},
+  "mes_totals": {{ mes_totals | tojson }}
+}
+</script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const chartData = JSON.parse(document.getElementById('chart-data').textContent);
         const ctxCat = document.getElementById('chartCategorias')?.getContext('2d');
         const ctxEvo = document.getElementById('chartEvolucion')?.getContext('2d');
 
@@ -94,9 +104,9 @@
             new Chart(ctxCat, {
                 type: 'doughnut',
                 data: {
-                    labels: {{ cat_labels | tojson }},
+                    labels: chartData.cat_labels,
                     datasets: [{
-                        data: {{ cat_totals | tojson }},
+                        data: chartData.cat_totals,
                         backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6c757d', '#6f42c1', '#fd7e14', '#20c997']
                     }]
                 },
@@ -114,10 +124,10 @@
             new Chart(ctxEvo, {
                 type: 'bar',
                 data: {
-                    labels: {{ mes_labels | tojson }},
+                    labels: chartData.mes_labels,
                     datasets: [{
                         label: 'Total ($)',
-                        data: {{ mes_totals | tojson }},
+                        data: chartData.mes_totals,
                         backgroundColor: '#0d6efd'
                     }]
                 },

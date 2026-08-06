@@ -161,17 +161,58 @@ def nuevo_gasto():
 
     return render_template("nuevo_gasto.html", gasto=None, **obtener_opciones())
 
-@app.route("/gastos")
+@app.route('/gastos')
 def listar_gastos():
-    orden = request.args.get("orden", "id")
-    direccion = request.args.get("dir", "desc")
-    columna = getattr(Gasto, orden, Gasto.id)
+    pagina = request.args.get('pagina', 1, type=int)
+    orden = request.args.get('orden', 'fecha')
+    direccion = request.args.get('dir', 'desc')
 
-    query = Gasto.query.order_by(columna.asc() if direccion == "asc" else columna.desc())
-    pagina = request.args.get("pagina", 1, type=int)
-    gastos = query.paginate(page=pagina, per_page=15, error_out=False)
+    # Captura de parámetros de búsqueda y filtro
+    q = request.args.get('q', '').strip()
+    categoria = request.args.get('categoria', '')
+    responsable = request.args.get('responsable', '')
+    fecha_desde = request.args.get('fecha_desde', '')
+    fecha_hasta = request.args.get('fecha_hasta', '')
 
-    return render_template("gastos.html", gastos=gastos, orden=orden, direccion=direccion)
+    query = Gasto.query
+
+    # Aplicación de filtros dinámicos
+    if q:
+        query = query.filter(Gasto.descripcion.ilike(f'%{q}%'))
+    if categoria:
+        query = query.filter(Gasto.categoria == categoria)
+    if responsable:
+        query = query.filter(Gasto.responsable == responsable)
+    if fecha_desde:
+        query = query.filter(Gasto.fecha >= fecha_desde)
+    if fecha_hasta:
+        query = query.filter(Gasto.fecha <= fecha_hasta)
+
+    # Ordenamiento
+    columna_orden = getattr(Gasto, orden, Gasto.fecha)
+    if direccion == 'desc':
+        query = query.order_by(columna_orden.desc())
+    else:
+        query = query.order_by(columna_orden.asc())
+
+    gastos = query.paginate(page=pagina, per_page=10)
+
+    # Obtener opciones dinámicas para los select del formulario
+    categorias, responsables, medios_pago = obtener_opciones()
+
+    return render_template(
+        'gastos.html',
+        gastos=gastos,
+        orden=orden,
+        direccion=direccion,
+        categorias=categorias,
+        responsables=responsables,
+        q=q,
+        categoria_sel=categoria,
+        responsable_sel=responsable,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta
+    )
 
 @app.route("/gastos/<int:id>/editar", methods=["GET", "POST"])
 def editar_gasto(id):
