@@ -159,11 +159,16 @@
             <td>$ {{ item.total | moneda }}</td>
             <td style="width: 300px;">
                 <div class="d-flex align-items-center">
-                    <div class="progress flex-grow-1 me-2">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.porcentaje | round(1) }}%;"></div>
-                        <strong>{{ item.porcentaje | round(1) }}%</strong>
+                    <div class="progress flex-grow-1 me-2" style="height: 16px;">
+                        <div class="progress-bar bg-success" 
+                            role="progressbar" 
+                            style="width: {{ item.porcentaje | round(1) }}%;"
+                            aria-valuenow="{{ item.porcentaje | round(1) }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100">
+                        </div>
                     </div>
-                    <strong>{{ item.porcentaje }}%</strong>
+                    <strong>{{ item.porcentaje | round(1) }}%</strong>
                 </div>
             </td>
         </tr>
