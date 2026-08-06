@@ -197,16 +197,24 @@ def listar_gastos():
 
     gastos = query.paginate(page=pagina, per_page=10)
 
-    # Obtener opciones dinámicas para los select del formulario
-    categorias, responsables, medios_pago = obtener_opciones()
+    # Consulta directa de valores únicos cargados en la base de datos
+    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+    responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
+
+    # Si la tabla de gastos está vacía o querés listas por defecto, podés usar estas de respaldo:
+    if not categorias:
+        categorias = ["Supermercado", "Restaurante", "Alquiler", "Agua", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales"]
+    
+    if not responsables:
+        responsables = ["Joffan", "Dore"]
 
     return render_template(
         'gastos.html',
         gastos=gastos,
         orden=orden,
         direccion=direccion,
-        categorias=categorias,
-        responsables=responsables,
+        categorias=sorted(categorias),
+        responsables=sorted(responsables),
         q=q,
         categoria_sel=categoria,
         responsable_sel=responsable,
