@@ -160,7 +160,8 @@
             <td style="width: 300px;">
                 <div class="d-flex align-items-center">
                     <div class="progress flex-grow-1 me-2">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.porcentaje }}%;"></div>
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.porcentaje | round(1) }}%;"></div>
+                        <strong>{{ item.porcentaje | round(1) }}%</strong>
                     </div>
                     <strong>{{ item.porcentaje }}%</strong>
                 </div>
