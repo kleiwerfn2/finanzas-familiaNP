@@ -94,6 +94,7 @@ def home():
 
     ultimos_gastos = gastos_query.order_by(Gasto.id.desc()).limit(5).all()
 
+    # --- Gastos por Categoría ---
     gastos_categoria = gastos_query.with_entities(
         Gasto.categoria, func.sum(Gasto.monto)
     ).group_by(Gasto.categoria).order_by(func.sum(Gasto.monto).desc()).all()
@@ -107,10 +108,22 @@ def home():
             "porcentaje": porcentaje
         })
 
-    # Listas enviadas a home.html para los gráficos
     cat_labels = [item["categoria"] for item in gastos_categoria_pct]
     cat_totals = [item["total"] for item in gastos_categoria_pct]
 
+    # --- Evolución Mensual (Gráfico Histórico) ---
+    gastos_todos = Gasto.query.all()
+    gastos_por_mes_dict = {}
+    for g in gastos_todos:
+        if g.fecha:
+            m = g.fecha[:7]
+            gastos_por_mes_dict[m] = gastos_por_mes_dict.get(m, 0) + g.monto
+
+    meses_ordenados = sorted(gastos_por_mes_dict.keys())
+    mes_labels = meses_ordenados
+    mes_totals = [gastos_por_mes_dict[m] for m in meses_ordenados]
+
+    # --- Desgloses adicionales ---
     gastos_responsable = gastos_query.with_entities(
         Gasto.responsable, func.sum(Gasto.monto)
     ).group_by(Gasto.responsable).order_by(func.sum(Gasto.monto).desc()).all()
@@ -130,8 +143,26 @@ def home():
         }
 
     meses_disponibles = sorted(
-        list(set(gasto.fecha[:7] for gasto in Gasto.query.all())),
+        list(set(gasto.fecha[:7] for gasto in Gasto.query.all() if gasto.fecha)),
         reverse=True
+    )
+
+    return render_template(
+        "home.html",
+        total_gastado=total_gastado,
+        cantidad_gastos=cantidad_gastos,
+        ultimos_gastos=ultimos_gastos,
+        gastos_categoria=gastos_categoria,
+        gastos_categoria_pct=gastos_categoria_pct,
+        cat_labels=cat_labels,
+        cat_totals=cat_totals,
+        mes_labels=mes_labels,
+        mes_totals=mes_totals,
+        gastos_responsable=gastos_responsable,
+        gastos_medio_pago=gastos_medio_pago,
+        categoria_mas_frecuente=categoria_mas_frecuente,
+        meses_disponibles=meses_disponibles,
+        mes_seleccionado=mes_seleccionado,
     )
 
     return render_template(
