@@ -60,7 +60,12 @@ def obtener_opciones():
     responsables = ["Joffan", "Dore"]
     medios_pago = ["Efectivo", "Débito", "Crédito", "Mercado Pago"]
 
-    return categorias_db, responsables, medios_pago
+    # Retornamos un diccionario con las llaves que esperan tus plantillas
+    return {
+        'categorias': categorias_db,
+        'responsables': responsables,
+        'medios_pago': medios_pago
+    }
 
 @app.route("/")
 def home():
