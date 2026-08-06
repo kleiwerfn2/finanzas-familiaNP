@@ -27,8 +27,8 @@
                 <th>Medio Pago</th>
                 <th>Vence</th>
                 <th>Estado</th>
-                <th class="text-end">Acciones</th>
                 <th>Estado del Mes</th>
+                <th class="text-end">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -47,6 +47,23 @@
                         <span class="badge bg-danger">Inactivo</span>
                     {% endif %}
                 </td>
+                <td>
+                    {% set gasto_id = generados_mes_ids.get(recurrente.id) %}
+                    
+                    {% if gasto_id %}
+                        {% if pagados_mes_ids.get(recurrente.id) %}
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-success text-decoration-none">
+                                ✅ Pagado (Este mes)
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-warning text-dark text-decoration-none">
+                                ⏳ Pendiente (Este mes)
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-secondary">Sin generar</span>
+                    {% endif %}
+                </td>
                 <td class="text-end">
                     <a href="{{ url_for('editar_recurrente', id=recurrente.id) }}" class="btn btn-sm btn-outline-primary me-1">
                         ✏️ Editar
@@ -58,30 +75,11 @@
             </tr>
             {% else %}
             <tr>
-                <td colspan="8" class="text-center py-4 text-muted">
+                <td colspan="9" class="text-center py-4 text-muted">
                     No hay gastos recurrentes cargados. ¡Crea el primero!
                 </td>
             </tr>
             {% endfor %}
-        
-            <td>
-                {% set gasto_id = generados_mes_ids.get(recurrente.id) %}
-                
-                {% if gasto_id %}
-                    {% if pagados_mes_ids.get(recurrente.id) %}
-                        <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-success text-decoration-none">
-                            ✅ Pagado (Este mes)
-                        </a>
-                    {% else %}
-                        <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-warning text-dark text-decoration-none">
-                            ⏳ Pendiente (Este mes)
-                        </a>
-                    {% endif %}
-                {% else %}
-                    <span class="badge bg-secondary">Sin generar</span>
-                {% endif %}
-            </td>
-            
         </tbody>
     </table>
 </div>
