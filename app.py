@@ -63,7 +63,6 @@ def home():
 
     gastos_query = Gasto.query if mes_seleccionado == "todos" else Gasto.query.filter(Gasto.fecha.startswith(mes_seleccionado))
 
-    # Suma optimizada ejecutada en SQLite
     total_gastado = db.session.query(func.coalesce(func.sum(Gasto.monto), 0)).filter(
         Gasto.id.in_(gastos_query.with_entities(Gasto.id))
     ).scalar()
@@ -84,6 +83,10 @@ def home():
         for cat, tot in gastos_categoria
     ]
 
+    # Datos para el gráfico de Dona (Categorías)
+    cat_labels = [item["categoria"] for item in gastos_categoria_pct]
+    cat_totals = [item["total"] for item in gastos_categoria_pct]
+
     gastos_responsable = gastos_query.with_entities(
         Gasto.responsable, func.sum(Gasto.monto)
     ).group_by(Gasto.responsable).order_by(func.sum(Gasto.monto).desc()).all()
@@ -102,9 +105,17 @@ def home():
             "porcentaje": gastos_categoria_pct[0]["porcentaje"]
         }
 
-    # Obtención de meses únicos usando función SQL
     meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).distinct().all()
     meses_disponibles = sorted([m[0] for m in meses_db if m[0]], reverse=True)
+
+    # Datos para el gráfico de Barras (últimos 6 meses)
+    gastos_mes_db = db.session.query(
+        func.substr(Gasto.fecha, 1, 7).label("mes"),
+        func.sum(Gasto.monto).label("total")
+    ).group_by("mes").order_by(db.desc("mes")).limit(6).all()
+
+    mes_labels = [m[0] for m in reversed(gastos_mes_db) if m[0]]
+    mes_totals = [float(m[1]) for m in reversed(gastos_mes_db) if m[0]]
 
     return render_template(
         "home.html",
@@ -118,7 +129,11 @@ def home():
         categoria_mas_frecuente=categoria_mas_frecuente,
         meses_disponibles=meses_disponibles,
         mes_seleccionado=mes_seleccionado,
-    ) 
+        cat_labels=cat_labels,
+        cat_totals=cat_totals,
+        mes_labels=mes_labels,
+        mes_totals=mes_totals
+    )
 
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():

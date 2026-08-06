@@ -1,285 +1,197 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-  
-<div class="d-flex justify-content-between align-items-center mb-4">
 
-    <h1 class="mb-4">
-        💰 Dashboard Familiar
-    </h1>
+<!-- Cargamos la librería Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">💰 Dashboard Familiar</h1>
 
     <form method="get">
-
         <div class="text-end">
-
-            <label class="fw-bold mb-1">
-                    📅 Período
-            </label>
+            <label class="fw-bold mb-1">📅 Período</label>
         </div>
-
-        <select
-            class="form-select"
-            name="mes"
-            onchange="this.form.submit()"
-            style="width: 240px;">
-
-            <option
-                value="todos"
-                {% if mes_seleccionado == 'todos' %}
-                selected
-                {% endif %}
-            >
-
+        <select class="form-select" name="mes" onchange="this.form.submit()" style="width: 240px;">
+            <option value="todos" {% if mes_seleccionado == 'todos' %}selected{% endif %}>
                 📊 Todo el Historial
-
             </option>
 
-            {% set nombres_meses = {
-                '01':'Enero',
-                '02':'Febrero',
-                '03':'Marzo',
-                '04':'Abril',
-                '05':'Mayo',
-                '06':'Junio',
-                '07':'Julio',
-                '08':'Agosto',
-                '09':'Septiembre',
-                '10':'Octubre',
-                '11':'Noviembre',
-                '12':'Diciembre'
-            } %}
+            {% set nombres_meses = {'01':'Enero','02':'Febrero','03':'Marzo','04':'Abril','05':'Mayo','06':'Junio','07':'Julio','08':'Agosto','09':'Septiembre','10':'Octubre','11':'Noviembre','12':'Diciembre'} %}
 
             {% for mes in meses_disponibles %}
-
                 {% set numero_mes = mes[5:7] %}
-
-                <option
-                    value="{{ mes }}"
-                    {% if mes == mes_seleccionado %}
-                    selected
-                    {% endif %}
-                >
-
+                <option value="{{ mes }}" {% if mes == mes_seleccionado %}selected{% endif %}>
                     📅 {{ nombres_meses[numero_mes] }} {{ mes[:4] }}
-
                 </option>
-
             {% endfor %}
-
         </select>
-
     </form>
-
 </div>
 
+<!-- Tarjetas resumen -->
 <div class="row">
-
     <div class="col-md-4 mb-3">
-
         <div class="card shadow h-100">
-
             <div class="card-body d-flex flex-column justify-content-center text-center">
-
                 <h5>Total Gastado</h5>
-
-                <h2 class="text-success fw-bold">
-                    $ {{ total_gastado | moneda }}
-                </h2>
-
+                <h2 class="text-success fw-bold">$ {{ total_gastado | moneda }}</h2>
             </div>
-
         </div>
-
     </div>
 
     <div class="col-md-4 mb-3">
-
         <div class="card shadow h-100">
-
             <div class="card-body d-flex flex-column justify-content-center text-center">
-
                 <h5>Cantidad Gastos</h5>
-
-                <h2 class="text-primary fw-bold">
-                    {{ cantidad_gastos }}
-                </h2>
-
+                <h2 class="text-primary fw-bold">{{ cantidad_gastos }}</h2>
             </div>
-
         </div>
-
     </div>
 
     <div class="col-md-4 mb-3">
-
         <div class="card shadow h-100">
-
             <div class="card-body d-flex flex-column justify-content-center text-center">
-
                 <h5>🐜 Categoría Más Frecuente</h5>
-
                 {% if categoria_mas_frecuente %}
-
-                    <h3 class="text-danger fw-bold">
-                        {{ categoria_mas_frecuente.categoria }}
-                    </h3>
-
-                    <p class="mb-1">
-                        {{ categoria_mas_frecuente.cantidad }} gastos
-                    </p>
-
-                    <p class="fw-bold">
-                        {{ categoria_mas_frecuente.porcentaje }}% del gasto total
-                    </p>
-
+                    <h3 class="text-danger fw-bold">{{ categoria_mas_frecuente.categoria }}</h3>
+                    <p class="mb-1">{{ categoria_mas_frecuente.cantidad }} gastos</p>
+                    <p class="fw-bold">{{ categoria_mas_frecuente.porcentaje }}% del gasto total</p>
                 {% else %}
-
                     <h3>Sin datos</h3>
-
                 {% endif %}
-
             </div>
-
         </div>
-
     </div>
+</div>
 
-<h3 class="mt-5">📊 Top por Categoría</h3>
+<!-- NUEVO: Sección de Gráficos Interactivos -->
+<div class="row my-4">
+    <div class="col-md-6 mb-3">
+        <div class="card shadow p-3 h-100">
+            <h5 class="text-center text-muted mb-3">🍩 Gastos por Categoría</h5>
+            <canvas id="chartCategorias"></canvas>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card shadow p-3 h-100">
+            <h5 class="text-center text-muted mb-3">📊 Evolución Mensual</h5>
+            <canvas id="chartEvolucion"></canvas>
+        </div>
+    </div>
+</div>
 
+<h3 class="mt-4">📊 Top por Categoría</h3>
 <table class="table table-striped table-hover shadow-sm">
-
     <thead>
         <tr>
-            <th>categoría</th>
-            <th>total</th>
+            <th>Categoría</th>
+            <th>Total</th>
             <th>Porcentaje</th>
         </tr>
     </thead>
-
     <tbody>
-
         {% for item in gastos_categoria_pct %}
-
         <tr {% if loop.first %}class="table-warning"{% endif %}>
-
             <td>{{ item.categoria }}</td>
-
-            <td>
-                $ {{ item.total | moneda }}
-            </td>
-
+            <td>$ {{ item.total | moneda }}</td>
             <td style="width: 300px;">
-
                 <div class="d-flex align-items-center">
-
                     <div class="progress flex-grow-1 me-2">
-
-                        <div
-                            class="progress-bar bg-success"
-                            role="progressbar"
-                            style="width: {{ item.porcentaje }}%;">
-
-                        </div>
-
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ item.porcentaje }}%;"></div>
                     </div>
-
-                    <strong>
-                        {{ item.porcentaje }}%
-                    </strong>
-
+                    <strong>{{ item.porcentaje }}%</strong>
                 </div>
-
             </td>
-
         </tr>
-
         {% endfor %}
-
     </tbody>
-
 </table>
 
 <h3 class="mt-5">👥 Distribución por Responsable</h3>
-
 <table class="table table-striped table-hover shadow-sm">
-
     <thead>
         <tr>
             <th>Responsable</th>
             <th>Total</th>
         </tr>
     </thead>
-
     <tbody>
-
         {% for responsable, total in gastos_responsable %}
         <tr>
             <td>{{ responsable }}</td>
             <td>$ {{ total | moneda }}</td>
         </tr>
         {% endfor %}
-
     </tbody>
-
 </table>
 
 <h3 class="mt-5">💳 Distribución por Medio de Pago</h3>
-
 <table class="table table-striped table-hover shadow-sm">
-
     <thead>
         <tr>
             <th>Medio de Pago</th>
             <th>Total</th>
         </tr>
     </thead>
-
     <tbody>
-
         {% for medio_pago, total in gastos_medio_pago %}
         <tr>
             <td>{{ medio_pago }}</td>
             <td>$ {{ total | moneda }}</td>
         </tr>
         {% endfor %}
-
     </tbody>
-
 </table>
-<h3 class="mt-4">
-    📋 Últimos Gastos
-</h3>
 
+<h3 class="mt-4">📋 Últimos Gastos</h3>
 <table class="table table-striped table-hover shadow-sm">
-
     <thead>
-
         <tr>
             <th>Fecha</th>
             <th>Descripción</th>
             <th>Monto</th>
         </tr>
-
     </thead>
-
     <tbody>
-
         {% for gasto in ultimos_gastos %}
-
         <tr>
-
             <td>{{ gasto.fecha }}</td>
-
             <td>{{ gasto.descripcion }}</td>
-
             <td>$ {{ gasto.monto | moneda }}</td>
-
         </tr>
-
         {% endfor %}
-
     </tbody>
-
 </table>
+
+<!-- Scripts para renderizar los gráficos -->
+<script>
+    const ctxCat = document.getElementById('chartCategorias').getContext('2d');
+    new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+            labels: {{ cat_labels | tojson }},
+            datasets: [{
+                data: {{ cat_totals | tojson }},
+                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6c757d', '#6f42c1', '#fd7e14', '#20c997']
+            }]
+        },
+        options: { responsive: true }
+    });
+
+    const ctxEvo = document.getElementById('chartEvolucion').getContext('2d');
+    new Chart(ctxEvo, {
+        type: 'bar',
+        data: {
+            labels: {{ mes_labels | tojson }},
+            datasets: [{
+                label: 'Total ($)',
+                data: {{ mes_totals | tojson }},
+                backgroundColor: '#0d6efd'
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
 
 {% endblock %}
