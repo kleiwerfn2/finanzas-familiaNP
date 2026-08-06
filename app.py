@@ -40,7 +40,7 @@ class GastoRecurrente(db.Model):
     activo = db.Column(db.Boolean, default=True)
 
 class Categoria(db.Model):
-    id = db.Column(db.Integer, primary_primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(50), unique=True, nullable=False)
 
     def __repr__(self):
