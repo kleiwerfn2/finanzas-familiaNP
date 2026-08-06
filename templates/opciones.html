@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<h3 class="mb-4">⚙️ Configuración de Parámetros</h3>
+
+<div class="row g-4">
+    <!-- CATEGORÍAS -->
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">🏷️ Categorías</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="d-flex gap-2 mb-3">
+                    <input type="hidden" name="tipo" value="categoria">
+                    <input type="text" name="nombre" class="form-control" placeholder="Nueva categoría..." required>
+                    <button type="submit" class="btn btn-success">➕</button>
+                </form>
+                <ul class="list-group">
+                    {% for cat in categorias %}
+                        <li class="list-group-item">{{ cat }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESPONSABLES -->
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">👤 Responsables</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="d-flex gap-2 mb-3">
+                    <input type="hidden" name="tipo" value="responsable">
+                    <input type="text" name="nombre" class="form-control" placeholder="Nuevo responsable..." required>
+                    <button type="submit" class="btn btn-success">➕</button>
+                </form>
+                <ul class="list-group">
+                    {% for resp in responsables %}
+                        <li class="list-group-item">{{ resp }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- MEDIOS DE PAGO -->
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">💳 Medios de Pago</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" class="d-flex gap-2 mb-3">
+                    <input type="hidden" name="tipo" value="medio_pago">
+                    <input type="text" name="nombre" class="form-control" placeholder="Nuevo medio de pago..." required>
+                    <button type="submit" class="btn btn-success">➕</button>
+                </form>
+                <ul class="list-group">
+                    {% for med in medios_pago %}
+                        <li class="list-group-item">{{ med }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
