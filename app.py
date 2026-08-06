@@ -11,10 +11,8 @@ db = SQLAlchemy(app)
 
 @app.template_filter('moneda')
 def moneda(valor):
-
     if valor is None:
         return "0,00"
-
     return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 class Gasto(db.Model):
@@ -27,130 +25,74 @@ class Gasto(db.Model):
     medio_pago = db.Column(db.String(50))
     gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True)
     pagado = db.Column(db.Boolean, default=False)  
-    # Relación para acceder directamente al objeto recurrente desde el gasto
     recurrente = db.relationship('GastoRecurrente', backref='gastos_generados', lazy=True)
 
 class GastoRecurrente(db.Model):
-
-    id = db.Column(db.Integer,primary_key=True)
-    descripcion = db.Column(db.String(200),nullable=False)
-    categoria = db.Column(db.String(100),nullable=False)
-    monto = db.Column(db.Float,nullable=False)
-    responsable = db.Column(db.String(100),nullable=False)
-    medio_pago = db.Column(db.String(100),nullable=False)
-    dia_vencimiento = db.Column(db.Integer,nullable=False)
-    activo = db.Column(db.Boolean,default=True)
+    id = db.Column(db.Integer, primary_key=True)
+    descripcion = db.Column(db.String(200), nullable=False)
+    categoria = db.Column(db.String(100), nullable=False)
+    monto = db.Column(db.Float, nullable=False)
+    responsable = db.Column(db.String(100), nullable=False)
+    medio_pago = db.Column(db.String(100), nullable=False)
+    dia_vencimiento = db.Column(db.Integer, nullable=False)
+    activo = db.Column(db.Boolean, default=True)
 
 with app.app_context():
     db.create_all()
 
 @app.route("/")
 def home():
-
-    mes_seleccionado = request.args.get(
-        "mes",
-        "todos"
-    )
+    mes_seleccionado = request.args.get("mes", "todos")
 
     if mes_seleccionado == "todos":
-
         gastos_query = Gasto.query
-
     else:
+        gastos_query = Gasto.query.filter(Gasto.fecha.startswith(mes_seleccionado))
 
-        gastos_query = Gasto.query.filter(
-            Gasto.fecha.startswith(
-                mes_seleccionado
-            )
-        )
-
-    total_gastado = sum(
-        gasto.monto
-        for gasto in gastos_query.all()
-    )
-
+    total_gastado = sum(gasto.monto for gasto in gastos_query.all())
     if total_gastado is None:
         total_gastado = 0
 
     cantidad_gastos = gastos_query.count()
-
-    ultimos_gastos = gastos_query.order_by(
-        Gasto.id.desc()
-    ).limit(5).all()
-
+    ultimos_gastos = gastos_query.order_by(Gasto.id.desc()).limit(5).all()
 
     gastos_categoria = gastos_query.with_entities(
-        Gasto.categoria,
-    func.sum(Gasto.monto)
-
-    ).group_by(
-        Gasto.categoria
-    ).order_by(
-        func.sum(Gasto.monto).desc()
-    ).all()
+        Gasto.categoria, func.sum(Gasto.monto)
+    ).group_by(Gasto.categoria).order_by(func.sum(Gasto.monto).desc()).all()
 
     gastos_categoria_pct = []
-
     for categoria, total in gastos_categoria:
-
         porcentaje = 0
-
         if total_gastado > 0:
             porcentaje = round((total / total_gastado) * 100, 1)
-
-        gastos_categoria_pct.append(
-            {
-                "categoria": categoria,
-                "total": total,
-                "porcentaje": porcentaje
-            }
-        )
+        gastos_categoria_pct.append({
+            "categoria": categoria,
+            "total": total,
+            "porcentaje": porcentaje
+        })
 
     gastos_responsable = gastos_query.with_entities(
-        Gasto.responsable,
-        func.sum(Gasto.monto)
-    ).group_by(
-        Gasto.responsable
-    ).order_by(
-        func.sum(Gasto.monto).desc()
-    ).all()
+        Gasto.responsable, func.sum(Gasto.monto)
+    ).group_by(Gasto.responsable).order_by(func.sum(Gasto.monto).desc()).all()
 
     gastos_medio_pago = gastos_query.with_entities(
-        Gasto.medio_pago,
-        func.sum(Gasto.monto)
-    ).group_by(
-        Gasto.medio_pago
-    ).order_by(
-        func.sum(Gasto.monto).desc()
-    ).all() 
+        Gasto.medio_pago, func.sum(Gasto.monto)
+    ).group_by(Gasto.medio_pago).order_by(func.sum(Gasto.monto).desc()).all() 
 
-    promedio_gasto = 0
-
-    if cantidad_gastos > 0:
-        promedio_gasto = total_gastado / cantidad_gastos
+    promedio_gasto = total_gastado / cantidad_gastos if cantidad_gastos > 0 else 0
 
     categoria_mas_frecuente = None
-
     if gastos_categoria_pct:
-
         categoria_nombre = gastos_categoria_pct[0]["categoria"]
-
-        cantidad_movimientos = gastos_query.filter(
-            Gasto.categoria == categoria_nombre
-        ).count()
-
+        cantidad_movimientos = gastos_query.filter(Gasto.categoria == categoria_nombre).count()
         categoria_mas_frecuente = {
             "categoria": categoria_nombre,
             "cantidad": cantidad_movimientos,
             "porcentaje": gastos_categoria_pct[0]["porcentaje"]
         }
+
     meses_disponibles = sorted(
-        list(
-            set(
-                gasto.fecha[:7]
-                for gasto in Gasto.query.all()
-            )
-        ),
+        list(set(gasto.fecha[:7] for gasto in Gasto.query.all())),
         reverse=True
     )
 
@@ -170,9 +112,7 @@ def home():
                                                  
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
-
     if request.method == "POST":
-
         gasto = Gasto(
             fecha=request.form["fecha"],
             descripcion=request.form["descripcion"],
@@ -181,56 +121,25 @@ def nuevo_gasto():
             responsable=request.form["responsable"],
             medio_pago=request.form["medio_pago"]
         )
-
         db.session.add(gasto)
         db.session.commit()
-
-        return render_template(
-            "gasto_guardado.html",
-            ultimo_gasto=gasto
-        )
+        return render_template("gasto_guardado.html", ultimo_gasto=gasto)
 
     return render_template("nuevo_gasto.html")
 
 @app.route("/gastos")
 def listar_gastos():
-
-    orden = request.args.get(
-        "orden",
-        "id"
-    )
-
-    direccion = request.args.get(
-        "dir",
-        "desc"
-    )
-
-    columna = getattr(
-        Gasto,
-        orden,
-        Gasto.id
-    )
+    orden = request.args.get("orden", "id")
+    direccion = request.args.get("dir", "desc")
+    columna = getattr(Gasto, orden, Gasto.id)
 
     if direccion == "asc":
-        query = Gasto.query.order_by(
-            columna.asc()
-        )
+        query = Gasto.query.order_by(columna.asc())
     else:
-        query = Gasto.query.order_by(
-            columna.desc()
-        )
+        query = Gasto.query.order_by(columna.desc())
 
-    pagina = request.args.get(
-        "pagina",
-        1,
-        type=int
-    )
-
-    gastos = query.paginate(
-        page=pagina,
-        per_page=15,
-        error_out=False
-    )
+    pagina = request.args.get("pagina", 1, type=int)
+    gastos = query.paginate(page=pagina, per_page=15, error_out=False)
 
     return render_template(
         "gastos.html",
@@ -239,52 +148,52 @@ def listar_gastos():
         direccion=direccion
     )
 
+# --- NUEVAS RUTAS DE EDICIÓN Y ELIMINACIÓN DE GASTOS ---
+
+@app.route("/gastos/<int:id>/editar", methods=["GET", "POST"])
+def editar_gasto(id):
+    gasto = Gasto.query.get_or_404(id)
+    if request.method == "POST":
+        gasto.fecha = request.form["fecha"]
+        gasto.descripcion = request.form["descripcion"]
+        gasto.monto = float(request.form["monto"] or 0)
+        gasto.categoria = request.form["categoria"]
+        gasto.responsable = request.form["responsable"]
+        gasto.medio_pago = request.form["medio_pago"]
+        db.session.commit()
+        return redirect(url_for("listar_gastos"))
+
+    return render_template("nuevo_gasto.html", gasto=gasto)
+
+@app.route("/gastos/<int:id>/eliminar")
+def eliminar_gasto(id):
+    gasto = Gasto.query.get_or_404(id)
+    db.session.delete(gasto)
+    db.session.commit()
+    return redirect(url_for("listar_gastos"))
+
 @app.route("/reportes")
 def reportes():
-
     gastos = Gasto.query.all()
-
     gastos_por_mes = {}
 
     for gasto in gastos:
-
         mes = gasto.fecha[:7]
+        gastos_por_mes[mes] = gastos_por_mes.get(mes, 0) + gasto.monto
 
-        if mes not in gastos_por_mes:
-            gastos_por_mes[mes] = 0
+    gastos_por_mes = sorted(gastos_por_mes.items(), reverse=True)
 
-        gastos_por_mes[mes] += gasto.monto
-
-    gastos_por_mes = sorted(
-        gastos_por_mes.items(),
-        reverse=True
-    )
-
-    total_mes_actual = 0
-    total_mes_anterior = 0
-
-    if len(gastos_por_mes) > 0:
-        total_mes_actual = gastos_por_mes[0][1]
-
-    if len(gastos_por_mes) > 1:
-        total_mes_anterior = gastos_por_mes[1][1]
+    total_mes_actual = gastos_por_mes[0][1] if len(gastos_por_mes) > 0 else 0
+    total_mes_anterior = gastos_por_mes[1][1] if len(gastos_por_mes) > 1 else 0
 
     variacion = 0
-
     if total_mes_anterior > 0:
+        variacion = round(((total_mes_actual - total_mes_anterior) / total_mes_anterior) * 100, 1)  
 
-        variacion = round(
-            (
-                (total_mes_actual - total_mes_anterior)
-                / total_mes_anterior
-            ) * 100,
-            1
-        )  
     categoria_mas_aumento = None
     comparativo_categorias = []
 
     if len(gastos_por_mes) >= 2:
-
         mes_actual = gastos_por_mes[0][0]
         mes_anterior = gastos_por_mes[1][0]
 
@@ -292,95 +201,48 @@ def reportes():
         categorias_anterior = {}
 
         for gasto in gastos:
-
             mes = gasto.fecha[:7]
-
             if mes == mes_actual:
-
-                categorias_actual[gasto.categoria] = (
-                    categorias_actual.get(gasto.categoria, 0)
-                    + gasto.monto
-                )
-
+                categorias_actual[gasto.categoria] = categorias_actual.get(gasto.categoria, 0) + gasto.monto
             elif mes == mes_anterior:
-
-                categorias_anterior[gasto.categoria] = (
-                    categorias_anterior.get(gasto.categoria, 0)
-                    + gasto.monto
-                )
+                categorias_anterior[gasto.categoria] = categorias_anterior.get(gasto.categoria, 0) + gasto.monto
 
         mayor_diferencia = 0
-
         for categoria, total_actual in categorias_actual.items():
-
-            total_anterior = categorias_anterior.get(
-                categoria,
-                0
-            )
-
+            total_anterior = categorias_anterior.get(categoria, 0)
             diferencia = total_actual - total_anterior
 
             if diferencia > mayor_diferencia:
-
                 porcentaje = 100
-
                 if total_anterior > 0:
-                    porcentaje = round(
-                        (diferencia / total_anterior) * 100,
-                        1
-                    )
+                    porcentaje = round((diferencia / total_anterior) * 100, 1)
 
                 mayor_diferencia = diferencia
-
                 categoria_mas_aumento = {
                     "categoria": categoria,
                     "diferencia": diferencia,
                     "porcentaje": porcentaje
                 }
 
-        todas_categorias = set(
-            list(categorias_actual.keys()) +
-            list(categorias_anterior.keys())
-        )
+        todas_categorias = set(list(categorias_actual.keys()) + list(categorias_anterior.keys()))
 
         for categoria in todas_categorias:
-
-            total_actual = categorias_actual.get(
-                categoria,
-                0
-            )
-
-            total_anterior = categorias_anterior.get(
-                categoria,
-                0
-            )
-
+            total_actual = categorias_actual.get(categoria, 0)
+            total_anterior = categorias_anterior.get(categoria, 0)
             variacion_categoria = 0
 
             if total_anterior > 0:
+                variacion_categoria = round(((total_actual - total_anterior) / total_anterior) * 100, 1)
 
-                variacion_categoria = round(
-                    (
-                        (total_actual - total_anterior)
-                        / total_anterior
-                    ) * 100,
-                    1
-                )
+            comparativo_categorias.append({
+                "categoria": categoria,
+                "actual": total_actual,
+                "anterior": total_anterior,
+                "diferencia": total_actual - total_anterior,
+                "variacion": variacion_categoria
+            })
 
-            comparativo_categorias.append(
-                {
-                    "categoria": categoria,
-                    "actual": total_actual,
-                    "anterior": total_anterior,
-                    "diferencia": total_actual - total_anterior,
-                    "variacion": variacion_categoria
-                }
-            )
-
-        comparativo_categorias.sort(
-            key=lambda x: abs(x["variacion"]),
-            reverse=True
-        )
+        comparativo_categorias.sort(key=lambda x: abs(x["variacion"]), reverse=True)
 
     return render_template(
         "reportes.html",
@@ -400,13 +262,8 @@ def listar_recurrentes():
     mes_actual = datetime.now().strftime("%Y-%m")
     
     recurrentes = GastoRecurrente.query.order_by(GastoRecurrente.descripcion).all()
-    
-    # 1. Buscamos solo los gastos reales cargados en el mes actual
     gastos_mes = Gasto.query.filter(Gasto.fecha.startswith(mes_actual)).all()
     
-    # 2. Armamos dos diccionarios para saber rápido en la plantilla:
-    # - ¿Qué gasto recurrente ya se generó este mes?
-    # - ¿Está pagado o no?
     pagados_mes_ids = {g.gasto_recurrente_id: g.pagado for g in gastos_mes if g.gasto_recurrente_id}
     generados_mes_ids = {g.gasto_recurrente_id: g.id for g in gastos_mes if g.gasto_recurrente_id}
 
@@ -432,12 +289,9 @@ def nuevo_recurrente():
         db.session.commit()
         return redirect(url_for("listar_recurrentes"))
 
-    # Extraer opciones únicas guardadas previamente en la tabla Gasto
-    # Lista predeterminada combinada con las existentes en la base de datos
     categorias_base = ["Vivienda", "Servicios", "Alimentación", "Transporte", "Entretenimiento", "Salud"]
     categorias_db = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
 
-    # Unir ambas listas sin repetir elementos
     categorias = sorted(list(set(categorias_base + categorias_db)))
     responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
     medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
@@ -465,7 +319,6 @@ def editar_recurrente(id):
         db.session.commit()
         return redirect(url_for("listar_recurrentes"))
 
-    # Carga de listas para el GET
     categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
     responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
     medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
@@ -491,16 +344,12 @@ def generar_gastos_mes():
     ahora = datetime.now()
     mes_actual = ahora.strftime("%Y-%m")
     
-    # Se corrige filter_eq por filter (o filter_by)
     recurrentes_activos = GastoRecurrente.query.filter(GastoRecurrente.activo == True).all()
-    generados = 0
 
     for rec in recurrentes_activos:
-        # Armar la fecha estimada de vencimiento (YYYY-MM-DD)
         dia_str = str(rec.dia_vencimiento).zfill(2)
         fecha_gasto = f"{mes_actual}-{dia_str}"
         
-        # Verificar si ya existe este gasto recurrente generado en el mes actual
         existente = Gasto.query.filter(
             Gasto.gasto_recurrente_id == rec.id,
             Gasto.fecha.startswith(mes_actual)
@@ -517,16 +366,15 @@ def generar_gastos_mes():
                 gasto_recurrente_id=rec.id
             )
             db.session.add(nuevo_gasto)
-            generados += 1
 
     db.session.commit()
-    
+    return redirect(url_for("listar_recurrentes"))
+
 @app.route("/gastos/<int:id>/toggle-pago")
 def toggle_pago_gasto(id):
     gasto = Gasto.query.get_or_404(id)
     gasto.pagado = not gasto.pagado
     db.session.commit()
-    # Redirige a la página desde donde vino la petición
     return redirect(request.referrer or url_for("listar_gastos"))
 
 
