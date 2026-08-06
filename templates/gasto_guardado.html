@@ -24,16 +24,12 @@
                 <hr>
 
                 <div class="d-grid gap-3">
-
-                    <a class="nav-link" href="/nuevo">
+                    <a class="btn btn-primary" href="{{ url_for('nuevo_gasto') }}">
                         ➕ Registrar otro gasto
                     </a>
-                    
-
-                    <a class="nav-link" href="/gastos">
-                          📋 Ver todos los gastos
-                     </a>
-
+                    <a class="btn btn-outline-secondary" href="{{ url_for('listar_gastos') }}">
+                        📋 Ver todos los gastos
+                    </a>
                 </div>
 
             </div>

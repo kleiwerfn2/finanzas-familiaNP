@@ -123,38 +123,22 @@
                     <hr class="text-white">
 
                     <ul class="nav flex-column">
-
                         <li class="nav-item">
-                            <a class="nav-link" href="/">
-                                🏠 <span class="texto-menu">Inicio</span>
-                            </a>
+                            <a class="nav-link" href="{{ url_for('home') }}">🏠 <span class="texto-menu">Inicio</span></a>
                         </li>
-
                         <li class="nav-item">
-                            <a class="nav-link" href="/nuevo">
-                                ➕ <span class="texto-menu">Nuevo Gasto</span>
-                            </a>
+                            <a class="nav-link" href="{{ url_for('nuevo_gasto') }}">➕ <span class="texto-menu">Nuevo Gasto</span></a>
                         </li>
-
                         <li class="nav-item">
-                            <a class="nav-link" href="/gastos">
-                                📋 <span class="texto-menu">Gastos</span>
-                            </a>
+                            <a class="nav-link" href="{{ url_for('listar_gastos') }}">📋 <span class="texto-menu">Gastos</span></a>
                         </li>
-
                         <li class="nav-item">
-                            <a class="nav-link" href="/reportes">
-                                📊 <span class="texto-menu">Reportes</span>
-                            </a>
+                            <a class="nav-link" href="{{ url_for('reportes') }}">📊 <span class="texto-menu">Reportes</span></a>
                         </li>
-                        
                         <li class="nav-item">
-                            <a class="nav-link" href="/recurrentes">
-                                🔁 <span class="texto-menu">Recurrentes</span>
-                            </a>
+                            <a class="nav-link" href="{{ url_for('listar_recurrentes') }}">🔁 <span class="texto-menu">Recurrentes</span></a>
                         </li>
                     </ul>
-
                 </div>
 
             </nav>
