@@ -65,21 +65,73 @@
     </div>
 </div>
 
-<!-- NUEVO: Sección de Gráficos Interactivos -->
+<!-- Sección de Gráficos Interactivos con altura controlada -->
 <div class="row my-4">
     <div class="col-md-6 mb-3">
         <div class="card shadow p-3 h-100">
-            <h5 class="text-center text-muted mb-3">🍩 Gastos por Categoría</h5>
-            <canvas id="chartCategorias"></canvas>
+            <h6 class="text-center text-muted fw-bold mb-2">🍩 Gastos por Categoría</h6>
+            <div style="position: relative; height: 240px;">
+                <canvas id="chartCategorias"></canvas>
+            </div>
         </div>
     </div>
     <div class="col-md-6 mb-3">
         <div class="card shadow p-3 h-100">
-            <h5 class="text-center text-muted mb-3">📊 Evolución Mensual</h5>
-            <canvas id="chartEvolucion"></canvas>
+            <h6 class="text-center text-muted fw-bold mb-2">📊 Evolución Mensual</h6>
+            <div style="position: relative; height: 240px;">
+                <canvas id="chartEvolucion"></canvas>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctxCat = document.getElementById('chartCategorias')?.getContext('2d');
+        const ctxEvo = document.getElementById('chartEvolucion')?.getContext('2d');
+
+        if (ctxCat) {
+            new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: {{ cat_labels | tojson }},
+                    datasets: [{
+                        data: {{ cat_totals | tojson }},
+                        backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6c757d', '#6f42c1', '#fd7e14', '#20c997']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        if (ctxEvo) {
+            new Chart(ctxEvo, {
+                type: 'bar',
+                data: {
+                    labels: {{ mes_labels | tojson }},
+                    datasets: [{
+                        label: 'Total ($)',
+                        data: {{ mes_totals | tojson }},
+                        backgroundColor: '#0d6efd'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    });
+</script>
 
 <h3 class="mt-4">📊 Top por Categoría</h3>
 <table class="table table-striped table-hover shadow-sm">
@@ -163,35 +215,5 @@
         {% endfor %}
     </tbody>
 </table>
-
-<!-- Scripts para renderizar los gráficos -->
-<script>
-    const ctxCat = document.getElementById('chartCategorias').getContext('2d');
-    new Chart(ctxCat, {
-        type: 'doughnut',
-        data: {
-            labels: {{ cat_labels | tojson }},
-            datasets: [{
-                data: {{ cat_totals | tojson }},
-                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#0dcaf0', '#6c757d', '#6f42c1', '#fd7e14', '#20c997']
-            }]
-        },
-        options: { responsive: true }
-    });
-
-    const ctxEvo = document.getElementById('chartEvolucion').getContext('2d');
-    new Chart(ctxEvo, {
-        type: 'bar',
-        data: {
-            labels: {{ mes_labels | tojson }},
-            datasets: [{
-                label: 'Total ($)',
-                data: {{ mes_totals | tojson }},
-                backgroundColor: '#0d6efd'
-            }]
-        },
-        options: { responsive: true }
-    });
-</script>
 
 {% endblock %}

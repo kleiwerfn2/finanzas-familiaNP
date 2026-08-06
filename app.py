@@ -83,7 +83,6 @@ def home():
         for cat, tot in gastos_categoria
     ]
 
-    # Datos para el gráfico de Dona (Categorías)
     cat_labels = [item["categoria"] for item in gastos_categoria_pct]
     cat_totals = [item["total"] for item in gastos_categoria_pct]
 
@@ -108,13 +107,24 @@ def home():
     meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).distinct().all()
     meses_disponibles = sorted([m[0] for m in meses_db if m[0]], reverse=True)
 
-    # Datos para el gráfico de Barras (últimos 6 meses)
+    # Datos para el gráfico de Barras (últimos 6 meses con nombre de mes)
+    nombres_meses = {
+        '01':'Enero', '02':'Febrero', '03':'Marzo', '04':'Abril',
+        '05':'Mayo', '06':'Junio', '07':'Julio', '08':'Agosto',
+        '09':'Septiembre', '10':'Octubre', '11':'Noviembre', '12':'Diciembre'
+    }
+
     gastos_mes_db = db.session.query(
         func.substr(Gasto.fecha, 1, 7).label("mes"),
         func.sum(Gasto.monto).label("total")
     ).group_by("mes").order_by(db.desc("mes")).limit(6).all()
 
-    mes_labels = [m[0] for m in reversed(gastos_mes_db) if m[0]]
+    mes_labels = []
+    for m in reversed(gastos_mes_db):
+        if m[0]:
+            num_mes = m[0][5:7]
+            mes_labels.append(nombres_meses.get(num_mes, m[0]))
+
     mes_totals = [float(m[1]) for m in reversed(gastos_mes_db) if m[0]]
 
     return render_template(
@@ -134,7 +144,6 @@ def home():
         mes_labels=mes_labels,
         mes_totals=mes_totals
     )
-
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
     if request.method == "POST":
