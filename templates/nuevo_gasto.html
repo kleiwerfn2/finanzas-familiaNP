@@ -9,7 +9,9 @@
         <div class="card shadow-lg">
 
             <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">💰 Registrar Gasto</h3>
+                <h3 class="mb-0">
+                    {% if gasto %}✏️ Editar Gasto{% else %}💰 Registrar Gasto{% endif %}
+                </h3>
             </div>
 
             <div class="card-body">
@@ -18,39 +20,27 @@
 
                     <div class="mb-3">
                         <label class="form-label">Fecha</label>
-                        <input type="date" class="form-control" name="fecha" required>
+                        <input type="date" class="form-control" name="fecha" value="{{ gasto.fecha if gasto else '' }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Descripción</label>
-                        <input type="text" class="form-control" name="descripcion" required>
+                        <input type="text" class="form-control" name="descripcion" value="{{ gasto.descripcion if gasto else '' }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Monto</label>
-                        <input type="number" step="0.01" class="form-control" name="monto" required>
+                        <input type="number" step="0.01" class="form-control" name="monto" value="{{ gasto.monto if gasto else '' }}" required>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label">Categoría</label>
 
                         <select class="form-select" name="categoria" required>
-                            <option value="">Seleccione...</option>
-                            <option>Supermercado</option>
-                            <option>Restaurante</option>
-                            <option>Alquiler</option>
-                            <option>Agua</option>
-                            <option>Luz</option>
-                            <option>Gas</option>
-                            <option>Internet</option>
-                            <option>Telefono</option>
-                            <option>Educación</option>
-                            <option>Deportes</option>
-                            <option>Transporte</option>
-                            <option>Salud</option>
-                            <option>Vacaciones</option>
-                            <option>Fondo de Retiro</option>
-                            <option>Gastos Personales</option>
+                            <option value="" disabled {% if not gasto %}selected{% endif %}>Seleccione...</option>
+                            {% for cat in ["Supermercado", "Restaurante", "Alquiler", "Agua", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales"] %}
+                                <option value="{{ cat }}" {% if gasto and gasto.categoria == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
@@ -58,9 +48,10 @@
                         <label class="form-label">Responsable</label>
 
                         <select class="form-select" name="responsable" required>
-                            <option value="">Seleccione...</option>
-                            <option>Joffan</option>
-                            <option>Dore</option>
+                            <option value="" disabled {% if not gasto %}selected{% endif %}>Seleccione...</option>
+                            {% for resp in ["Joffan", "Dore"] %}
+                                <option value="{{ resp }}" {% if gasto and gasto.responsable == resp %}selected{% endif %}>{{ resp }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
@@ -68,22 +59,16 @@
                         <label class="form-label">Medio de Pago</label>
 
                         <select class="form-select" name="medio_pago" required>
-                            <option value="">Seleccione...</option>
-                            <option>BBVA Master</option>
-                            <option>BBVA Visa</option>
-                            <option>Santander Visa</option>
-                            <option>Santander American</option>
-                            <option>Transferencia Galicia</option>
-                            <option>Transferencia Santander</option>
-                            <option>Transferencia BBVA</option>
-                            <option>Mercado Pago</option>
-                            <option>Efectivo</option>
+                            <option value="" disabled {% if not gasto %}selected{% endif %}>Seleccione...</option>
+                            {% for mp in ["BBVA Master", "BBVA Visa", "Santander Visa", "Santander American", "Transferencia Galicia", "Transferencia Santander", "Transferencia BBVA", "Mercado Pago", "Efectivo"] %}
+                                <option value="{{ mp }}" {% if gasto and gasto.medio_pago == mp %}selected{% endif %}>{{ mp }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">
-                            Guardar Gasto
+                            {% if gasto %}Guardar Cambios{% else %}Guardar Gasto{% endif %}
                         </button>
                     </div>
 
