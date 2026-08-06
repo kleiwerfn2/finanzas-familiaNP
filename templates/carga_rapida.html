@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-4">
+                <h3 class="text-center fw-bold mb-4">⚡ Registro Rápido</h3>
+
+                <form method="POST" action="{{ url_for('carga_rapida') }}">
+                    <input type="hidden" name="fecha" value="{{ fecha_hoy }}">
+
+                    <!-- Campo de Monto Gigante -->
+                    <div class="mb-4 text-center">
+                        <label class="form-label text-muted fw-bold">MONTO</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-light fw-bold fs-3">$</span>
+                            <input type="number" step="0.01" class="form-control form-control-lg text-center fs-2 fw-bold" name="monto" placeholder="0.00" autofocus required>
+                        </div>
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mb-3">
+                        <input type="text" class="form-control form-control-lg" name="descripcion" placeholder="¿En qué gastaste?" required>
+                    </div>
+
+                    <!-- Categoría y Medio de Pago -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <select class="form-select form-select-lg fs-6" name="categoria" required>
+                                <option value="" disabled selected>Categoría</option>
+                                {% for cat in categorias %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select form-select-lg fs-6" name="medio_pago" required>
+                                <option value="" disabled selected>Medio Pago</option>
+                                {% for mp in medios_pago %}
+                                    <option value="{{ mp }}">{{ mp }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Responsable -->
+                    <div class="mb-4">
+                        <select class="form-select form-select-lg fs-6" name="responsable" required>
+                            <option value="" disabled selected>Responsable</option>
+                            {% for resp in responsables %}
+                                <option value="{{ resp }}">{{ resp }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Botón Guardar -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg py-3 fw-bold fs-5 shadow">
+                            💾 Cargar Gasto
+                        </button>
+                        <a href="{{ url_for('listar_gastos') }}" class="btn btn-outline-secondary py-2">
+                            Cancelar
+                        </a>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

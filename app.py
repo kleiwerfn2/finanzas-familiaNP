@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from datetime import date
 
 app = Flask(__name__)
 
@@ -384,6 +385,50 @@ def toggle_pago_gasto(id):
     gasto.pagado = not gasto.pagado
     db.session.commit()
     return redirect(request.referrer or url_for("listar_gastos"))
+
+@app.route('/rapido', methods=['GET', 'POST'])
+def carga_rapida():
+    if request.method == 'POST':
+        fecha = request.form.get('fecha') or date.today().strftime('%Y-%m-%d')
+        descripcion = request.form.get('descripcion')
+        monto = float(request.form.get('monto', 0))
+        categoria = request.form.get('categoria')
+        responsable = request.form.get('responsable')
+        medio_pago = request.form.get('medio_pago')
+
+        nuevo_gasto = Gasto(
+            fecha=fecha,
+            descripcion=descripcion,
+            monto=monto,
+            categoria=categoria,
+            responsable=responsable,
+            medio_pago=medio_pago
+        )
+        db.session.add(nuevo_gasto)
+        db.session.commit()
+        return redirect(url_for('listar_gastos'))
+
+    # Opciones dinámicas de la base de datos
+    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
+    responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
+    medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
+
+    # Respaldos
+    if not categorias:
+        categorias = ["Supermercado", "Restaurante", "Transporte", "Gastos Personales"]
+    if not responsables:
+        responsables = ["Joffan", "Dore"]
+    if not medios_pago:
+        medios_pago = ["Efectivo", "Debito", "Credito", "Mercado Pago"]
+
+    fecha_hoy = date.today().strftime('%Y-%m-%d')
+    return render_template(
+        'carga_rapida.html',
+        fecha_hoy=fecha_hoy,
+        categorias=sorted(categorias),
+        responsables=sorted(responsables),
+        medios_pago=sorted(medios_pago)
+    )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
