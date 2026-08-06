@@ -107,6 +107,10 @@ def home():
             "porcentaje": porcentaje
         })
 
+    # Listas enviadas a home.html para los gráficos
+    cat_labels = [item["categoria"] for item in gastos_categoria_pct]
+    cat_totals = [item["total"] for item in gastos_categoria_pct]
+
     gastos_responsable = gastos_query.with_entities(
         Gasto.responsable, func.sum(Gasto.monto)
     ).group_by(Gasto.responsable).order_by(func.sum(Gasto.monto).desc()).all()
@@ -137,12 +141,14 @@ def home():
         ultimos_gastos=ultimos_gastos,
         gastos_categoria=gastos_categoria,
         gastos_categoria_pct=gastos_categoria_pct,
+        cat_labels=cat_labels,
+        cat_totals=cat_totals,
         gastos_responsable=gastos_responsable,
         gastos_medio_pago=gastos_medio_pago,
         categoria_mas_frecuente=categoria_mas_frecuente,
         meses_disponibles=meses_disponibles,
         mes_seleccionado=mes_seleccionado,
-    ) 
+    )
 
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
