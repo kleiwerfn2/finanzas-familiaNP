@@ -262,10 +262,12 @@ def reportes():
 
     categoria_mas_aumento = None
     comparativo_categorias = []
+    comparativo_recurrentes = []
 
     if len(gastos_por_mes) >= 2:
         mes_act, mes_ant = gastos_por_mes[0][0], gastos_por_mes[1][0]
 
+        # --- COMPARATIVO POR CATEGORÍA ---
         cat_actual = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.fecha.startswith(mes_act)).group_by(Gasto.categoria).all())
         cat_anterior = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.fecha.startswith(mes_ant)).group_by(Gasto.categoria).all())
 
@@ -288,6 +290,38 @@ def reportes():
 
         comparativo_categorias.sort(key=lambda x: abs(x["variacion"]), reverse=True)
 
+        # --- COMPARATIVO DE GASTOS RECURRENTES ---
+        # Consultamos todos los gastos recurrentes definidos
+        recurrentes = Recurrente.query.all()
+
+        for rec in recurrentes:
+            # Sumamos los gastos registrados asociados a este recurrente en cada mes
+            # Se asume que el modelo Gasto almacena la relación con 'recurrente_id' o filtra por descripción/nombre
+            tot_act = db.session.query(func.sum(Gasto.monto)).filter(
+                Gasto.fecha.startswith(mes_act),
+                Gasto.recurrente_id == rec.id
+            ).scalar() or 0.0
+
+            tot_ant = db.session.query(func.sum(Gasto.monto)).filter(
+                Gasto.fecha.startswith(mes_ant),
+                Gasto.recurrente_id == rec.id
+            ).scalar() or 0.0
+
+            dif_rec = tot_act - tot_ant
+            var_rec = round((dif_rec / tot_ant) * 100, 1) if tot_ant > 0 else (100.0 if tot_act > 0 else 0.0)
+
+            comparativo_recurrentes.append({
+                "nombre": rec.nombre,
+                "categoria": rec.categoria,
+                "actual": float(tot_act),
+                "anterior": float(tot_ant),
+                "diferencia": float(dif_rec),
+                "variacion": var_rec
+            })
+
+        # Ordenamos los recurrentes por los que tuvieron mayor diferencia en pesos
+        comparativo_recurrentes.sort(key=lambda x: abs(x["diferencia"]), reverse=True)
+
     return render_template(
         "reportes.html",
         total_mes_actual=total_mes_actual,
@@ -296,6 +330,7 @@ def reportes():
         gastos_por_mes=gastos_por_mes,
         categoria_mas_aumento=categoria_mas_aumento,
         comparativo_categorias=comparativo_categorias,
+        comparativo_recurrentes=comparativo_recurrentes
     )
 
 # --- RUTAS DE GASTOS RECURRENTES ---
