@@ -75,25 +75,52 @@
     '12':'Diciembre'
 } %}
 
-<!-- TABLA: GASTOS POR MES -->
-<h5 class="fw-bold mt-3 mb-2">📋 Gastos por Mes</h5>
-<div class="table-responsive mb-3">
+<!-- TABLA: CONTROL DE GASTOS RECURRENTES -->
+<h5 class="fw-bold mt-4 mb-2">🔁 Control de Gastos Recurrentes</h5>
+<div class="table-responsive mb-4">
     <table class="table table-sm table-striped table-hover shadow-sm align-middle mb-0">
         <thead>
             <tr>
-                <th>Mes</th>
-                <th>Total</th>
+                <th>Servicio / Recurrente</th>
+                <th>Anterior</th>
+                <th>Actual</th>
+                <th>Dif. $</th>
+                <th>Var. %</th>
             </tr>
         </thead>
         <tbody>
-            {% for mes, total in gastos_por_mes %}
+            {% for item in comparativo_recurrentes %}
             <tr>
                 <td>
-                    {{ nombres_meses[mes[5:7]] }} {{ mes[:4] }}
+                    <span class="fw-bold d-block">{{ item.descripcion }}</span>
+                    <small class="text-muted" style="font-size: 0.75rem;">{{ item.categoria }}</small>
                 </td>
-                <td class="fw-semibold">
-                    $ {{ total | moneda }}
+                <td>$ {{ item.anterior | moneda }}</td>
+                <td class="fw-semibold">$ {{ item.actual | moneda }}</td>
+                <td>
+                    {% if item.diferencia > 0 %}
+                        <span class="text-danger">+$ {{ item.diferencia | moneda }}</span>
+                    {% elif item.diferencia < 0 %}
+                        <span class="text-success">-$ {{ (item.diferencia * -1) | moneda }}</span>
+                    {% else %}
+                        <span class="text-muted">$ 0,00</span>
+                    {% endif %}
                 </td>
+                <td>
+                    {% if item.actual == 0 and item.anterior > 0 %}
+                        <span class="badge bg-secondary">Sin registrar</span>
+                    {% elif item.variacion > 0 %}
+                        <span class="text-danger fw-bold">+{{ item.variacion }}%</span>
+                    {% elif item.variacion < 0 %}
+                        <span class="text-success fw-bold">{{ item.variacion }}%</span>
+                    {% else %}
+                        <span class="text-muted">0%</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" class="text-center text-muted small py-3">No hay gastos recurrentes para comparar.</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -137,52 +164,25 @@
     </table>
 </div>
 
-<!-- TABLA: COMPARATIVO DE GASTOS RECURRENTES -->
-<h5 class="fw-bold mt-4 mb-2">🔁 Control de Gastos Recurrentes</h5>
-<div class="table-responsive mb-4">
+<!-- TABLA: GASTOS POR MES -->
+<h5 class="fw-bold mt-3 mb-2">📋 Gastos por Mes</h5>
+<div class="table-responsive mb-3">
     <table class="table table-sm table-striped table-hover shadow-sm align-middle mb-0">
         <thead>
             <tr>
-                <th>Servicio / Recurrente</th>
-                <th>Anterior</th>
-                <th>Actual</th>
-                <th>Dif. $</th>
-                <th>Var. %</th>
+                <th>Mes</th>
+                <th>Total</th>
             </tr>
         </thead>
         <tbody>
-            {% for item in comparativo_recurrentes %}
+            {% for mes, total in gastos_por_mes %}
             <tr>
                 <td>
-                    <span class="fw-bold d-block">{{ item.nombre }}</span>
-                    <small class="text-muted" style="font-size: 0.75rem;">{{ item.categoria }}</small>
+                    {{ nombres_meses[mes[5:7]] }} {{ mes[:4] }}
                 </td>
-                <td>$ {{ item.anterior | moneda }}</td>
-                <td class="fw-semibold">$ {{ item.actual | moneda }}</td>
-                <td>
-                    {% if item.diferencia > 0 %}
-                        <span class="text-danger">+$ {{ item.diferencia | moneda }}</span>
-                    {% elif item.diferencia < 0 %}
-                        <span class="text-success">-$ {{ (item.diferencia * -1) | moneda }}</span>
-                    {% else %}
-                        <span class="text-muted">$ 0,00</span>
-                    {% endif %}
+                <td class="fw-semibold">
+                    $ {{ total | moneda }}
                 </td>
-                <td>
-                    {% if item.actual == 0 and item.anterior > 0 %}
-                        <span class="badge bg-secondary">Sin registrar</span>
-                    {% elif item.variacion > 0 %}
-                        <span class="text-danger fw-bold">+{{ item.variacion }}%</span>
-                    {% elif item.variacion < 0 %}
-                        <span class="text-success fw-bold">{{ item.variacion }}%</span>
-                    {% else %}
-                        <span class="text-muted">0%</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5" class="text-center text-muted small py-3">No hay gastos recurrentes para comparar.</td>
             </tr>
             {% endfor %}
         </tbody>
