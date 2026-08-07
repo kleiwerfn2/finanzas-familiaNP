@@ -46,8 +46,8 @@
 
         <div class="col-12 col-md-4 d-flex align-items-end">
             <div class="d-flex gap-2 w-100">
-                <button type="submit" class="btn btn-sm btn-primary flex-fill text-nowrap">🔍 Buscar</button>
-                <a href="{{ url_for('listar_gastos') }}" class="btn btn-sm btn-outline-secondary flex-fill text-nowrap">🧹 Limpiar</a>
+                <button type="submit" class="btn btn-sm btn-primary flex-fill text-nowrap" title="Aplicar filtros de búsqueda">🔍 Buscar</button>
+                <a href="{{ url_for('listar_gastos') }}" class="btn btn-sm btn-outline-secondary flex-fill text-nowrap" title="Limpiar filtros de búsqueda">🧹 Limpiar</a>
             </div>
         </div>
     </div>
@@ -87,7 +87,7 @@
                 <td class="text-center text-nowrap">
                     {% if gasto.gasto_recurrente_id %}
                         {% if gasto.pagado %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success text-nowrap">✅ Pagado</a>
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success text-nowrap" title="Marcar como no pagado">✅ Pagado</a>
                         {% else %}
                             <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-warning text-nowrap">⏳ Pendiente</a>
                         {% endif %}
