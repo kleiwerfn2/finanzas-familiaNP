@@ -292,7 +292,7 @@ def reportes():
 
         # --- COMPARATIVO DE GASTOS RECURRENTES ---
         # Consultamos todos los gastos recurrentes definidos
-        recurrentes = Recurrente.query.all()
+        recurrentes = GastoRecurrente.query.all()
 
         for rec in recurrentes:
             # Sumamos los gastos registrados asociados a este recurrente en cada mes
