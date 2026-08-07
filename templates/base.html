@@ -13,7 +13,7 @@
             background-color: #f5f6fa;
         }
 
-        /* Estilos personalizados para la barra y el menú desplegable */
+        /* Estilos generales para el menú */
         .bg-custom-navy {
             background-color: #1e3a5f !important;
         }
@@ -40,20 +40,54 @@
             padding: 20px;
             overflow-x: hidden;
         }
+
+        /* ============================================================
+           AJUSTES RESPONSIVOS PARA PANTALLAS PEQUEÑAS (MÓVILES)
+           ============================================================ */
+        @media (max-width: 576px) {
+            /* Aprovecha al máximo el ancho de la pantalla del iPhone */
+            .content {
+                padding: 10px !important;
+            }
+
+            /* Escala los títulos para que no rompan líneas ni ocupen mucho alto */
+            h1, .h1 { font-size: 1.4rem !important; }
+            h2, .h2 { font-size: 1.25rem !important; }
+            h3, .h3 { font-size: 1.1rem !important; }
+            h4, .h4, .navbar-brand { font-size: 1rem !important; }
+
+            /* Compacta tablas, tarjetas y formularios en el contenido */
+            .table {
+                font-size: 0.85rem !important;
+            }
+
+            .card-body {
+                padding: 0.75rem !important;
+            }
+
+            .btn {
+                font-size: 0.875rem !important;
+                padding: 0.375rem 0.65rem !important;
+            }
+
+            .form-control, .form-select, .form-label {
+                font-size: 0.9rem !important;
+            }
+        }
     </style>
 </head>
 
 <body>
 
     <!-- BARRA SUPERIOR FIJA -->
-    <nav class="navbar navbar-dark bg-custom-navy sticky-top shadow-sm">
+    <nav class="navbar navbar-dark bg-custom-navy sticky-top shadow-sm py-2">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="{{ url_for('home') }}">
+            <a class="navbar-brand fw-bold text-truncate" style="max-width: 80%;" href="{{ url_for('home') }}">
                 💰 Finanzas Familiares
             </a>
             
-            <!-- Botón Hamburguesa (Único elemento visible del menú) -->
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-controls="menuOffcanvas" aria-label="Abrir menú">
+            <!-- Botón Hamburguesa -->
+            <button class="navbar-toggler border-0 p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-controls="menuOffcanvas" aria-label="Abrir menú">
                 <span class="navbar-toggler-icon"></span>
             </button>
         </div>
@@ -108,8 +142,8 @@
 
     <!-- Botón Flotante de Carga Rápida (Solo visible en móviles/tablets) -->
     <a href="{{ url_for('carga_rapida') }}" 
-       class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-4 shadow-lg d-md-none d-flex align-items-center justify-content-center" 
-       style="width: 60px; height: 60px; font-size: 28px; z-index: 1050; text-decoration: none;">
+       class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-3 shadow-lg d-md-none d-flex align-items-center justify-content-center" 
+       style="width: 52px; height: 52px; font-size: 24px; z-index: 1050; text-decoration: none;">
         ⚡
     </a>
 
