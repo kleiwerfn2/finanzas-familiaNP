@@ -2,106 +2,65 @@
 
 {% block contenido %}
 
-<h1 class="mb-4">
-    📊 Reportes
-</h1>
+<h1 class="mb-4">📊 Reportes</h1>
 
-<div class="row">
+<!-- Tarjetas resumen: Scroll horizontal en móviles sin romper la fila -->
+<div class="row flex-nowrap overflow-x-auto pb-2 mb-4 ms-0 me-0" style="-webkit-overflow-scrolling: touch;">
 
-    <div class="col-lg-3 col-md-6 mb-3">
-
+    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
         <div class="card shadow h-100">
-
-            <div class="card-body text-center">
-
+            <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5>Mes Actual</h5>
-
-                <h2 class="text-success">
+                <h2 class="text-success fw-bold">
                     $ {{ total_mes_actual | moneda }}
                 </h2>
-
             </div>
-
         </div>
-
     </div>
 
-    <div class="col-lg-3 col-md-6 mb-3">
-
+    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
         <div class="card shadow h-100">
-
-            <div class="card-body text-center">
-
+            <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5>Mes Anterior</h5>
-
-                <h2 class="text-primary">
+                <h2 class="text-primary fw-bold">
                     $ {{ total_mes_anterior | moneda }}
                 </h2>
-
             </div>
-
         </div>
-
     </div>
 
-    <div class="col-lg-3 col-md-6 mb-3">
-
+    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
         <div class="card shadow h-100">
-
-            <div class="card-body text-center">
-
+            <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5>Variación</h5>
-
-                <h2 class="{% if variacion > 0 %}text-danger{% else %}text-success{% endif %}">
+                <h2 class="{% if variacion > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
                     {{ variacion }}%
                 </h2>
-                
             </div>
-
         </div>
-
     </div>
 
-    <div class="col-lg-3 col-md-6 mb-3">
-
+    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
         <div class="card shadow h-100">
-
-            <div class="card-body text-center">
-
+            <div class="card-body text-center d-flex flex-column justify-content-center">
                 <h5>🔥 Categoría que más aumentó</h5>
-
                 {% if categoria_mas_aumento %}
-
                     <h3 class="text-danger fw-bold">
-
                         {{ categoria_mas_aumento.categoria }}
-
                     </h3>
-
                     <p class="mb-1">
-
                         +$ {{ categoria_mas_aumento.diferencia | moneda }}
-
                     </p>
-
-                    <p class="fw-bold">
-
+                    <p class="fw-bold mb-0">
                         +{{ categoria_mas_aumento.porcentaje }}%
-
                     </p>
-
                 {% else %}
-
-                    <p>
+                    <p class="mb-0">
                         ✅ No hay categorías con aumento
                     </p>
-
                 {% endif %}
-
             </div>
-
         </div>
-
     </div>
 </div>
 
@@ -120,104 +79,65 @@
     '12':'Diciembre'
 } %}
 
-<h3 class="mt-5">
-    📋 Gastos por Mes
-</h3>
+<h3 class="mt-4 mb-3">📋 Gastos por Mes</h3>
+<div class="table-responsive mb-4">
+    <table class="table table-striped table-hover shadow-sm align-middle">
+        <thead>
+            <tr>
+                <th>Mes</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mes, total in gastos_por_mes %}
+            <tr>
+                <td>
+                    {{ nombres_meses[mes[5:7]] }}
+                    {{ mes[:4] }}
+                </td>
+                <td>
+                    $ {{ total | moneda }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-<table class="table table-striped table-hover shadow-sm">
-
-    <thead>
-        <tr>
-            <th>Mes</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        {% for mes, total in gastos_por_mes %}
-
-        <tr>
-
-            <td>
-
-                {{ nombres_meses[mes[5:7]] }}
-                {{ mes[:4] }}
-
-            </td>
-
-            <td>
-                $ {{ total | moneda }}
-            </td>
-
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
-
-<h3 class="mt-5">
-    📊 Comparativo por Categoría
-</h3>
-
-<table class="table table-striped table-hover shadow-sm">
-
-    <thead>
-        <tr>
-            <th>Categoría</th>
-            <th>Mes Anterior</th>
-            <th>Mes Actual</th>
-            <th>Diferencia $</th>
-            <th>Variación</th>
-        </tr>
-    </thead>
-
-    <tbody>
-
-        {% for item in comparativo_categorias %}
-
-        <tr {% if loop.first %}class="table-warning"{% endif %}>
-
-            <td>{{ item.categoria }}</td>
-
-            <td>
-                $ {{ item.anterior | moneda }}
-            </td>
-
-            <td>
-                $ {{ item.actual | moneda }}
-            </td>
-
-            <td>
-                $ {{ item.diferencia | moneda }}
-            </td>
-
-            <td>
-
-                {% if item.variacion > 0 %}
-
-                    <span class="text-danger fw-bold">
-                        +{{ item.variacion }}%
-                    </span>
-
-                {% else %}
-
-                    <span class="text-success fw-bold">
-                        {{ item.variacion }}%
-                    </span>
-
-                {% endif %}
-
-            </td>
-
-        </tr>
-
-        {% endfor %}
-
-    </tbody>
-
-</table>
+<h3 class="mt-4 mb-3">📊 Comparativo por Categoría</h3>
+<div class="table-responsive mb-4">
+    <table class="table table-striped table-hover shadow-sm align-middle">
+        <thead>
+            <tr>
+                <th>Categoría</th>
+                <th>Mes Anterior</th>
+                <th>Mes Actual</th>
+                <th>Diferencia $</th>
+                <th>Variación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in comparativo_categorias %}
+            <tr {% if loop.first %}class="table-warning"{% endif %}>
+                <td>{{ item.categoria }}</td>
+                <td>$ {{ item.anterior | moneda }}</td>
+                <td>$ {{ item.actual | moneda }}</td>
+                <td>$ {{ item.diferencia | moneda }}</td>
+                <td>
+                    {% if item.variacion > 0 %}
+                        <span class="text-danger fw-bold">
+                            +{{ item.variacion }}%
+                        </span>
+                    {% else %}
+                        <span class="text-success fw-bold">
+                            {{ item.variacion }}%
+                        </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 {% endblock %}
