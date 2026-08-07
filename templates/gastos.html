@@ -5,55 +5,54 @@
 <h1 class="mb-4">📋 Listado de Gastos</h1>
 
 <!-- Panel de Filtros y Búsqueda -->
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <!-- Formulario de Filtros Corregido -->
-        <form method="get" class="card shadow-sm p-3 mb-4">
-            <div class="row g-2 align-items-end">
-                <div class="col-lg-3 col-md-6">
-                    <label for="buscar" class="form-label fw-bold small mb-1">🔍 Buscar</label>
-                    <input type="text" id="buscar" name="buscar" class="form-control" placeholder="Descripción..." value="{{ request.args.get('buscar', '') }}">
-                </div>
-
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <label for="categoria" class="form-label fw-bold small mb-1">Categoría</label>
-                    <select id="categoria" name="categoria" class="form-select">
-                        <option value="">Todas</option>
-                        {% for cat in categorias %}
-                            <option value="{{ cat.id }}" {% if request.args.get('categoria') == cat.id|string %}selected{% endif %}>{{ cat.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <label for="responsable" class="form-label fw-bold small mb-1">Responsable</label>
-                    <select id="responsable" name="responsable" class="form-select">
-                        <option value="">Todos</option>
-                        {% for resp in responsables %}
-                            <option value="{{ resp.id }}" {% if request.args.get('responsable') == resp.id|string %}selected{% endif %}>{{ resp.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <label for="desde" class="form-label fw-bold small mb-1">Desde</label>
-                    <input type="date" id="desde" name="desde" class="form-control" value="{{ request.args.get('desde', '') }}">
-                </div>
-
-                <div class="col-lg-2 col-md-3 col-sm-6">
-                    <label for="hasta" class="form-label fw-bold small mb-1">Hasta</label>
-                    <input type="date" id="hasta" name="hasta" class="form-control" value="{{ request.args.get('hasta', '') }}">
-                </div>
-
-                <!-- Botonera adaptativa -->
-                <div class="col-lg-1 col-md-12 d-flex gap-1">
-                    <button type="submit" class="btn btn-primary flex-fill" title="Filtrar">🔍</button>
-                    <a href="{{ url_for('listar_gastos') }}" class="btn btn-outline-secondary flex-fill" title="Limpiar Filtros">🧹</a>
-                </div>
+<div class="card-body">
+    <!-- Formulario de Filtros Corregido -->
+    <form method="get" class="card shadow-sm p-3 mb-4">
+        <div class="row g-2 align-items-end">
+            <div class="col-lg-3 col-md-6">
+                <label for="buscar" class="form-label fw-bold small mb-1">🔍 Buscar</label>
+                <input type="text" id="buscar" name="buscar" class="form-control" placeholder="Descripción..." value="{{ request.args.get('buscar', '') }}">
             </div>
-        </form>
-    </div>
+
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="categoria" class="form-label fw-bold small mb-1">Categoría</label>
+                <select id="categoria" name="categoria" class="form-select">
+                    <option value="">Todas</option>
+                    {% for cat in categorias %}
+                        <option value="{{ cat.id }}" {% if request.args.get('categoria') == cat.id|string %}selected{% endif %}>{{ cat.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="responsable" class="form-label fw-bold small mb-1">Responsable</label>
+                <select id="responsable" name="responsable" class="form-select">
+                    <option value="">Todos</option>
+                    {% for resp in responsables %}
+                        <option value="{{ resp.id }}" {% if request.args.get('responsable') == resp.id|string %}selected{% endif %}>{{ resp.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="desde" class="form-label fw-bold small mb-1">Desde</label>
+                <input type="date" id="desde" name="desde" class="form-control" value="{{ request.args.get('desde', '') }}">
+            </div>
+
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label for="hasta" class="form-label fw-bold small mb-1">Hasta</label>
+                <input type="date" id="hasta" name="hasta" class="form-control" value="{{ request.args.get('hasta', '') }}">
+            </div>
+
+            <!-- Botonera adaptativa -->
+            <div class="col-lg-1 col-md-12 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-fill" title="Filtrar">🔍</button>
+                <a href="{{ url_for('listar_gastos') }}" class="btn btn-outline-secondary flex-fill" title="Limpiar Filtros">🧹</a>
+            </div>
+        </div>
+    </form>
 </div>
+
 
 <div class="table-responsive">
     <table class="table table-striped table-hover align-middle">
