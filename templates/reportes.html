@@ -4,60 +4,56 @@
 
 <h1 class="mb-4">📊 Reportes</h1>
 
-<!-- Tarjetas resumen: Scroll horizontal en móviles sin romper la fila -->
+<!-- Tarjetas resumen: versión compacta para mobile con scroll horizontal -->
 <div class="row flex-nowrap overflow-x-auto pb-2 mb-4 ms-0 me-0" style="-webkit-overflow-scrolling: touch;">
 
-    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
-        <div class="card shadow h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h5>Mes Actual</h5>
-                <h2 class="text-success fw-bold">
+    <div class="col-7 col-sm-6 col-lg-3 flex-shrink-0 mb-2 px-1">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                <small class="text-muted fw-bold mb-1">Mes Actual</small>
+                <h4 class="text-success fw-bold mb-0">
                     $ {{ total_mes_actual | moneda }}
-                </h2>
+                </h4>
             </div>
         </div>
     </div>
 
-    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
-        <div class="card shadow h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h5>Mes Anterior</h5>
-                <h2 class="text-primary fw-bold">
+    <div class="col-7 col-sm-6 col-lg-3 flex-shrink-0 mb-2 px-1">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                <small class="text-muted fw-bold mb-1">Mes Anterior</small>
+                <h4 class="text-primary fw-bold mb-0">
                     $ {{ total_mes_anterior | moneda }}
-                </h2>
+                </h4>
             </div>
         </div>
     </div>
 
-    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
-        <div class="card shadow h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h5>Variación</h5>
-                <h2 class="{% if variacion > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+    <div class="col-7 col-sm-6 col-lg-3 flex-shrink-0 mb-2 px-1">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                <small class="text-muted fw-bold mb-1">Variación</small>
+                <h4 class="{% if variacion > 0 %}text-danger{% else %}text-success{% endif %} fw-bold mb-0">
                     {{ variacion }}%
-                </h2>
+                </h4>
             </div>
         </div>
     </div>
 
-    <div class="col-10 col-sm-6 col-lg-3 flex-shrink-0 mb-2">
-        <div class="card shadow h-100">
-            <div class="card-body text-center d-flex flex-column justify-content-center">
-                <h5>🔥 Categoría que más aumentó</h5>
+    <div class="col-7 col-sm-6 col-lg-3 flex-shrink-0 mb-2 px-1">
+        <div class="card shadow-sm h-100">
+            <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                <small class="text-muted fw-bold mb-1">🔥 Más Aumento</small>
                 {% if categoria_mas_aumento %}
-                    <h3 class="text-danger fw-bold">
+                    <h5 class="text-danger fw-bold text-truncate mb-1" title="{{ categoria_mas_aumento.categoria }}">
                         {{ categoria_mas_aumento.categoria }}
-                    </h3>
-                    <p class="mb-1">
-                        +$ {{ categoria_mas_aumento.diferencia | moneda }}
-                    </p>
-                    <p class="fw-bold mb-0">
-                        +{{ categoria_mas_aumento.porcentaje }}%
-                    </p>
+                    </h5>
+                    <small class="text-muted d-block">+$ {{ categoria_mas_aumento.diferencia | moneda }}</small>
+                    <small class="fw-bold text-danger">+{{ categoria_mas_aumento.porcentaje }}%</small>
                 {% else %}
-                    <p class="mb-0">
-                        ✅ No hay categorías con aumento
-                    </p>
+                    <small class="text-muted mb-0">
+                        ✅ Sin aumentos
+                    </small>
                 {% endif %}
             </div>
         </div>
