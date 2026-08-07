@@ -1,5 +1,3 @@
-{% extends "base.html" %}
-
 {% block contenido %}
 
 <h1 class="mb-4">📋 Listado de Gastos</h1>
@@ -10,7 +8,7 @@
         <!-- Fila 1 -->
         <div class="col-12 col-md-4">
             <label for="buscar" class="form-label fw-bold small mb-0 fs-7">🔍 Buscar</label>
-            <input type="text" id="buscar" name="buscar" class="form-control form-control-sm" placeholder="Descripción..." value="{{ request.args.get('buscar', '') }}">
+            <input type="text" id="buscar" name="q" class="form-control form-control-sm" placeholder="Descripción..." value="{{ q }}">
         </div>
 
         <div class="col-12 col-md-4">
@@ -18,7 +16,7 @@
             <select id="categoria" name="categoria" class="form-select form-select-sm">
                 <option value="">Todas</option>
                 {% for cat in categorias %}
-                    <option value="{{ cat.id }}" {% if request.args.get('categoria') == cat.id|string %}selected{% endif %}>{{ cat.nombre }}</option>
+                    <option value="{{ cat }}" {% if categoria_sel == cat %}selected{% endif %}>{{ cat }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -28,7 +26,7 @@
             <select id="responsable" name="responsable" class="form-select form-select-sm">
                 <option value="">Todos</option>
                 {% for resp in responsables %}
-                    <option value="{{ resp.id }}" {% if request.args.get('responsable') == resp.id|string %}selected{% endif %}>{{ resp.nombre }}</option>
+                    <option value="{{ resp }}" {% if responsable_sel == resp %}selected{% endif %}>{{ resp }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -36,12 +34,12 @@
         <!-- Fila 2 -->
         <div class="col-12 col-md-4">
             <label for="desde" class="form-label fw-bold small mb-0 fs-7">Desde</label>
-            <input type="date" id="desde" name="desde" class="form-control form-control-sm" value="{{ request.args.get('desde', '') }}">
+            <input type="date" id="desde" name="fecha_desde" class="form-control form-control-sm" value="{{ fecha_desde }}">
         </div>
 
         <div class="col-12 col-md-4">
             <label for="hasta" class="form-label fw-bold small mb-0 fs-7">Hasta</label>
-            <input type="date" id="hasta" name="hasta" class="form-control form-control-sm" value="{{ request.args.get('hasta', '') }}">
+            <input type="date" id="hasta" name="fecha_hasta" class="form-control form-control-sm" value="{{ fecha_hasta }}">
         </div>
 
         <div class="col-12 col-md-4 d-flex align-items-end">
@@ -58,9 +56,9 @@
 
         <thead class="table-dark text-nowrap">
             <tr>
-                <th><a href="/gastos?orden=fecha&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}" class="text-white text-decoration-none">Fecha</a></th>
-                <th><a href="/gastos?orden=descripcion&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}" class="text-white text-decoration-none">Descripción</a></th>
-                <th><a href="/gastos?orden=monto&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}" class="text-white text-decoration-none">Monto</a></th>
+                <th><a href="/gastos?orden=fecha&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="text-white text-decoration-none">Fecha</a></th>
+                <th><a href="/gastos?orden=descripcion&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="text-white text-decoration-none">Descripción</a></th>
+                <th><a href="/gastos?orden=monto&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="text-white text-decoration-none">Monto</a></th>
                 <th>Categoría</th>
                 <th>Responsable</th>
                 <th>Medio Pago</th>
@@ -115,7 +113,7 @@
     </table>
 </div>
 
-<!-- Paginación -->
+<!-- Paginación con parámetros de búsqueda preservados -->
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
         {% if gastos.has_prev %}
