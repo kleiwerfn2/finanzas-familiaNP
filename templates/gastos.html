@@ -5,58 +5,57 @@
 <h1 class="mb-4">📋 Listado de Gastos</h1>
 
 <!-- Panel de Filtros y Búsqueda -->
-<div class="d-flex flex-wrap">
-    <form method="get" class="card shadow-sm p-3 mb-4">
-        <div class="row g-2 align-items-end">
-            <div class="col-lg-3 col-md-6">
-                <label for="buscar" class="form-label fw-bold small mb-1">🔍 Buscar</label>
-                <input type="text" id="buscar" name="buscar" class="form-control" placeholder="Descripción..." value="{{ request.args.get('buscar', '') }}">
-            </div>
+<form method="get" class="card shadow-sm p-3 mb-4 w-100">
+    <div class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label for="buscar" class="form-label fw-bold small mb-1">🔍 Buscar</label>
+            <input type="text" id="buscar" name="buscar" class="form-control" placeholder="Descripción..." value="{{ request.args.get('buscar', '') }}">
+        </div>
 
-            <div class="col-lg-2 col-md-3 col-sm-6">
-                <label for="categoria" class="form-label fw-bold small mb-1">Categoría</label>
-                <select id="categoria" name="categoria" class="form-select">
-                    <option value="">Todas</option>
-                    {% for cat in categorias %}
-                        <option value="{{ cat.id }}" {% if request.args.get('categoria') == cat.id|string %}selected{% endif %}>{{ cat.nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <div class="col-lg-2 col-md-3 col-sm-6">
+            <label for="categoria" class="form-label fw-bold small mb-1">Categoría</label>
+            <select id="categoria" name="categoria" class="form-select">
+                <option value="">Todas</option>
+                {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if request.args.get('categoria') == cat.id|string %}selected{% endif %}>{{ cat.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-            <div class="col-lg-2 col-md-3 col-sm-6">
-                <label for="responsable" class="form-label fw-bold small mb-1">Responsable</label>
-                <select id="responsable" name="responsable" class="form-select">
-                    <option value="">Todos</option>
-                    {% for resp in responsables %}
-                        <option value="{{ resp.id }}" {% if request.args.get('responsable') == resp.id|string %}selected{% endif %}>{{ resp.nombre }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <div class="col-lg-2 col-md-3 col-sm-6">
+            <label for="responsable" class="form-label fw-bold small mb-1">Responsable</label>
+            <select id="responsable" name="responsable" class="form-select">
+                <option value="">Todos</option>
+                {% for resp in responsables %}
+                    <option value="{{ resp.id }}" {% if request.args.get('responsable') == resp.id|string %}selected{% endif %}>{{ resp.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-            <div class="col-lg-2 col-md-3 col-sm-6">
-                <label for="desde" class="form-label fw-bold small mb-1">Desde</label>
-                <input type="date" id="desde" name="desde" class="form-control" value="{{ request.args.get('desde', '') }}">
-            </div>
+        <div class="col-lg-2 col-md-3 col-sm-6">
+            <label for="desde" class="form-label fw-bold small mb-1">Desde</label>
+            <input type="date" id="desde" name="desde" class="form-control" value="{{ request.args.get('desde', '') }}">
+        </div>
 
-            <div class="col-lg-2 col-md-3 col-sm-6">
-                <label for="hasta" class="form-label fw-bold small mb-1">Hasta</label>
-                <input type="date" id="hasta" name="hasta" class="form-control" value="{{ request.args.get('hasta', '') }}">
-            </div>
+        <div class="col-lg-1 col-md-3 col-sm-6">
+            <label for="hasta" class="form-label fw-bold small mb-1">Hasta</label>
+            <input type="date" id="hasta" name="hasta" class="form-control" value="{{ request.args.get('hasta', '') }}">
+        </div>
 
-            <!-- Botonera adaptativa -->
-            <div class="col-lg-1 col-md-12 d-flex gap-1">
-                <button type="submit" class="btn btn-primary flex-fill" title="Filtrar">🔍</button>
-                <a href="{{ url_for('listar_gastos') }}" class="btn btn-outline-secondary flex-fill" title="Limpiar Filtros">🧹</a>
+        <!-- Botonera adaptativa optimizada -->
+        <div class="col-lg-2 col-md-12">
+            <div class="d-flex gap-2 w-100">
+                <button type="submit" class="btn btn-primary flex-fill text-nowrap" title="Filtrar">🔍 Buscar</button>
+                <a href="{{ url_for('listar_gastos') }}" class="btn btn-outline-secondary flex-fill text-nowrap" title="Limpiar Filtros">🧹 Limpiar</a>
             </div>
         </div>
-    </form>
-</div>
+    </div>
+</form>
 
+<div class="table-responsive shadow-sm rounded">
+    <table class="table table-striped table-hover align-middle mb-0">
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
-
-        <thead class="table-dark">
+        <thead class="table-dark text-nowrap">
             <tr>
                 <th><a href="/gastos?orden=fecha&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}" class="text-white text-decoration-none">Fecha</a></th>
                 <th><a href="/gastos?orden=descripcion&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}" class="text-white text-decoration-none">Descripción</a></th>
@@ -72,33 +71,35 @@
         <tbody>
             {% for gasto in gastos.items %}
             <tr>
-                <td>{{ gasto.fecha }}</td>
+                <td class="text-nowrap">{{ gasto.fecha }}</td>
                 <td>
                     <strong>{{ gasto.descripcion }}</strong>
                     {% if gasto.gasto_recurrente_id %}
                         <span class="badge bg-info text-dark ms-1" title="Gasto recurrente">🔁 Recurrente</span>
                     {% endif %}
                 </td>
-                <td>${{ gasto.monto | moneda }}</td>
+                <td class="text-nowrap">${{ gasto.monto | moneda }}</td>
                 <td><span class="badge bg-secondary">{{ gasto.categoria }}</span></td>
                 <td>{{ gasto.responsable }}</td>
                 <td>{{ gasto.medio_pago }}</td>
                 
-                <td class="text-center">
+                <td class="text-center text-nowrap">
                     {% if gasto.gasto_recurrente_id %}
                         {% if gasto.pagado %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success">✅ Pagado</a>
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success text-nowrap">✅ Pagado</a>
                         {% else %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-warning">⏳ Pendiente</a>
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-warning text-nowrap">⏳ Pendiente</a>
                         {% endif %}
                     {% else %}
                         <span class="text-muted">-</span>
                     {% endif %}
                 </td>
 
-                <td class="text-end">
-                    <a href="{{ url_for('editar_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-primary me-1">✏️</a>
-                    <a href="{{ url_for('eliminar_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar gasto?')">🗑️</a>
+                <td class="text-end text-nowrap">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Acciones">
+                        <a href="{{ url_for('editar_gasto', id=gasto.id) }}" class="btn btn-outline-primary" title="Editar">✏️</a>
+                        <a href="{{ url_for('eliminar_gasto', id=gasto.id) }}" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar gasto?')" title="Eliminar">🗑️</a>
+                    </div>
                 </td>
             </tr>
             {% else %}
@@ -113,8 +114,8 @@
     </table>
 </div>
 
-<!-- Paginación con conservación de filtros -->
-<nav>
+<!-- Paginación -->
+<nav class="mt-4">
     <ul class="pagination justify-content-center">
         {% if gastos.has_prev %}
         <li class="page-item">
