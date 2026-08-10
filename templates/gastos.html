@@ -79,7 +79,7 @@
                         <span class="badge bg-info text-dark ms-1" title="Gasto recurrente">🔁 Recurrente</span>
                     {% endif %}
                 </td>
-                <td class="text-nowrap">${{ gasto.monto | moneda }}</td>
+                <td class="text-nowrap">{{ gasto.monto | moneda }}</td>
                 <td><span class="badge bg-secondary">{{ gasto.categoria }}</span></td>
                 <td>{{ gasto.responsable }}</td>
                 <td>{{ gasto.medio_pago }}</td>

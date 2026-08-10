@@ -49,7 +49,7 @@ class GastoRecurrente(db.Model):
 
 # --- FUNCIÓN AUXILIAR DRY PARA OPCIONES DE FORMULARIO ---
 def obtener_opciones():
-    cat_base = ["Supermercado", "Restaurante", "Alquiler", "Expensas", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales", "Cora", "Auto", "Varios"]
+    cat_base = ["Supermercado", "Restaurante", "Alquiler", "Expensas", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales", "Cora", "Auto", "Varios", "combustible"]
     resp_base = ["Joffan", "Dore"]
     medios_base = ["BBVA Master", "BBVA Visa", "Santander Visa", "Santander American", "Transferencia Galicia", "Transferencia Santander", "Transferencia BBVA", "Mercado Pago", "Efectivo"]
 
