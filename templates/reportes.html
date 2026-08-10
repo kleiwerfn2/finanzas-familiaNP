@@ -12,7 +12,7 @@
             <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                 <span class="text-muted fw-bold small d-block mb-1 text-truncate">Mes Actual</span>
                 <span class="text-success fw-bold fs-6 fs-sm-5">
-                    $ {{ total_mes_actual | moneda }}
+                    {{ total_mes_actual | moneda }}
                 </span>
             </div>
         </div>
@@ -23,7 +23,7 @@
             <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                 <span class="text-muted fw-bold small d-block mb-1 text-truncate">Mes Anterior</span>
                 <span class="text-primary fw-bold fs-6 fs-sm-5">
-                    $ {{ total_mes_anterior | moneda }}
+                    {{ total_mes_anterior | moneda }}
                 </span>
             </div>
         </div>
@@ -49,7 +49,7 @@
                         {{ categoria_mas_aumento.categoria }}
                     </span>
                     <span class="text-muted d-block" style="font-size: 0.7rem;">
-                        +${{ categoria_mas_aumento.diferencia | moneda }} (+{{ categoria_mas_aumento.porcentaje }}%)
+                        +{{ categoria_mas_aumento.diferencia | moneda }} (+{{ categoria_mas_aumento.porcentaje }}%)
                     </span>
                 {% else %}
                     <span class="text-muted small">✅ Sin aumentos</span>
@@ -95,13 +95,13 @@
                     <span class="fw-bold d-block">{{ item.descripcion }}</span>
                     <small class="text-muted" style="font-size: 0.75rem;">{{ item.categoria }}</small>
                 </td>
-                <td>$ {{ item.anterior | moneda }}</td>
-                <td class="fw-semibold">$ {{ item.actual | moneda }}</td>
+                <td>{{ item.anterior | moneda }}</td>
+                <td class="fw-semibold">{{ item.actual | moneda }}</td>
                 <td>
                     {% if item.diferencia > 0 %}
-                        <span class="text-danger">+$ {{ item.diferencia | moneda }}</span>
+                        <span class="text-danger">+{{ item.diferencia | moneda }}</span>
                     {% elif item.diferencia < 0 %}
-                        <span class="text-success">-$ {{ (item.diferencia * -1) | moneda }}</span>
+                        <span class="text-success">-{{ (item.diferencia * -1) | moneda }}</span>
                     {% else %}
                         <span class="text-muted">$ 0,00</span>
                     {% endif %}
@@ -144,9 +144,9 @@
             {% for item in comparativo_categorias %}
             <tr {% if loop.first %}class="table-warning"{% endif %}>
                 <td class="fw-semibold">{{ item.categoria }}</td>
-                <td>$ {{ item.anterior | moneda }}</td>
-                <td>$ {{ item.actual | moneda }}</td>
-                <td>$ {{ item.diferencia | moneda }}</td>
+                <td>{{ item.anterior | moneda }}</td>
+                <td>{{ item.actual | moneda }}</td>
+                <td>{{ item.diferencia | moneda }}</td>
                 <td>
                     {% if item.variacion > 0 %}
                         <span class="text-danger fw-bold">
@@ -181,7 +181,7 @@
                     {{ nombres_meses[mes[5:7]] }} {{ mes[:4] }}
                 </td>
                 <td class="fw-semibold">
-                    $ {{ total | moneda }}
+                    {{ total | moneda }}
                 </td>
             </tr>
             {% endfor %}

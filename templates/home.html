@@ -35,7 +35,7 @@
         <div class="card shadow-sm h-100 border-0 bg-white">
             <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                 <span class="text-muted fw-bold small d-block mb-1 text-truncate">Total Gastado</span>
-                <span class="text-success fw-bold fs-6 fs-sm-5">$ {{ total_gastado | moneda }}</span>
+                <span class="text-success fw-bold fs-6 fs-sm-5">{{ total_gastado | moneda }}</span>
             </div>
         </div>
     </div>
@@ -84,7 +84,7 @@
             {% for item in gastos_categoria_pct %}
             <tr {% if loop.first %}class="table-warning"{% endif %}>
                 <td>{{ item.categoria }}</td>
-                <td class="fw-semibold">$ {{ item.total | moneda }}</td>
+                <td class="fw-semibold">{{ item.total | moneda }}</td>
                 <td style="min-width: 130px; width: 220px;">
                     <div class="d-flex align-items-center">
                         <div class="progress flex-grow-1 me-2" style="height: 10px;">
@@ -200,7 +200,7 @@
             {% for responsable, total in gastos_responsable %}
             <tr>
                 <td>{{ responsable }}</td>
-                <td class="fw-semibold">$ {{ total | moneda }}</td>
+                <td class="fw-semibold">{{ total | moneda }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -221,7 +221,7 @@
             {% for medio_pago, total in gastos_medio_pago %}
             <tr>
                 <td>{{ medio_pago }}</td>
-                <td class="fw-semibold">$ {{ total | moneda }}</td>
+                <td class="fw-semibold">{{ total | moneda }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -244,7 +244,7 @@
             <tr>
                 <td>{{ gasto.fecha }}</td>
                 <td>{{ gasto.descripcion }}</td>
-                <td class="fw-semibold">$ {{ gasto.monto | moneda }}</td>
+                <td class="fw-semibold">{{ gasto.monto | moneda }}</td>
             </tr>
             {% endfor %}
         </tbody>

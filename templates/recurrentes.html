@@ -36,7 +36,7 @@
             <tr class="{{ 'table-secondary opacity-75' if not recurrente.activo }}">
                 <td><strong>{{ recurrente.descripcion }}</strong></td>
                 <td><span class="badge bg-secondary">{{ recurrente.categoria }}</span></td>
-                <td>$ {{ recurrente.monto | moneda }}</td>
+                <td>{{ recurrente.monto | moneda }}</td>
                 <td>{{ recurrente.responsable }}</td>
                 <td>{{ recurrente.medio_pago }}</td>
                 <td>Día {{ recurrente.dia_vencimiento }}</td>
