@@ -1,12 +1,19 @@
-from datetime import datetime
+import os
+from datetime import datetime, date
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
-from datetime import date
 
 app = Flask(__name__)
 
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////app/data/finanzas.db"
+# Obtener la URL de conexión (Render / Supabase) o usar SQLite en local por defecto
+db_url = os.environ.get("DATABASE_URL", "sqlite:////app/data/finanzas.db")
+
+# Corregir el protocolo si empieza con 'postgres://' (compatibilidad con SQLAlchemy)
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
