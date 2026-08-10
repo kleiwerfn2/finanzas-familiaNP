@@ -21,8 +21,9 @@ db = SQLAlchemy(app)
 @app.template_filter('moneda')
 def moneda(valor):
     if valor is None:
-        return "0,00"
-    return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+        return "$ 0,00"
+    formatted = f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"$ {formatted}"
 
 class Gasto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
