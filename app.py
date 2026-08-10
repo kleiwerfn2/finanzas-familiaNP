@@ -46,8 +46,6 @@ class GastoRecurrente(db.Model):
     dia_vencimiento = db.Column(db.Integer, nullable=False)
     activo = db.Column(db.Boolean, default=True)
 
-with app.app_context():
-    db.create_all()
 
 # --- FUNCIÓN AUXILIAR DRY PARA OPCIONES DE FORMULARIO ---
 def obtener_opciones():
@@ -467,6 +465,9 @@ def carga_rapida():
         responsables=sorted(responsables),
         medios_pago=sorted(medios_pago)
     )
+
+with app.app_context():
+    db.create_all()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
