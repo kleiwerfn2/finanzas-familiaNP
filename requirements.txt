@@ -1,4 +1,8 @@
 flask==3.0.3
 flask-sqlalchemy==3.1.1
 gunicorn==21.2.0
+<<<<<<< HEAD
 psycopg2-binary  
+=======
+psycopg2-binary 
+>>>>>>> 75497e5 (requerimientos actualizados)
