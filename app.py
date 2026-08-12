@@ -25,6 +25,53 @@ def moneda(valor):
     formatted = f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     return f"$ {formatted}"
 
+@app.context_processor
+def inject_alertas():
+    try:
+        hoy = date.today()
+        mes_actual = hoy.strftime("%Y-%m")
+        dia_actual = hoy.day
+
+        # Obtener recurrentes activos
+        recurrentes_activos = GastoRecurrente.query.filter_by(activo=True).all()
+        
+        # Gastos del mes vinculados a recurrentes
+        gastos_mes = Gasto.query.filter(
+            Gasto.fecha.startswith(mes_actual),
+            Gasto.gasto_recurrente_id.isnot(None)
+        ).all()
+
+        # Mapeo de estados del mes
+        pagados_dict = {g.gasto_recurrente_id: g.pagado for g in gastos_mes}
+        generados_dict = {g.gasto_recurrente_id: g for g in gastos_mes}
+
+        alertas = []
+        for rec in recurrentes_activos:
+            esta_pagado = pagados_dict.get(rec.id, False)
+            
+            # Si NO está pagado, evaluamos si ya venció o vence en los próximos 5 días
+            if not esta_pagado:
+                dias_para_vencer = rec.dia_vencimiento - dia_actual
+                
+                # Alerta si vence en 5 días o menos, o si el día ya pasó en este mes
+                if dias_para_vencer <= 5:
+                    alertas.append({
+                        "id": rec.id,
+                        "descripcion": rec.descripcion,
+                        "monto": rec.monto,
+                        "dia_vencimiento": rec.dia_vencimiento,
+                        "vencido": dias_para_vencer < 0,
+                        "dias_restantes": dias_para_vencer,
+                        "gasto_id": generados_dict[rec.id].id if rec.id in generados_dict else None
+                    })
+
+        # Ordenar: primero los ya vencidos y luego los más próximos a vencer
+        alertas.sort(key=lambda x: x["dia_vencimiento"])
+
+        return dict(alertas_vencimiento=alertas, total_alertas=len(alertas))
+    except Exception:
+        return dict(alertas_vencimiento=[], total_alertas=0)
+        
 class Gasto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.String(20))

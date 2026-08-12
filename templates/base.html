@@ -106,16 +106,78 @@
 <body>
 
     <!-- BARRA SUPERIOR FIJA -->
-    <nav class="navbar navbar-dark bg-custom-navy sticky-top shadow-sm py-1">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold text-truncate" style="max-width: 80%;" href="{{ url_for('home') }}">
-                💰 Finanzas Familiares
-            </a>
+    <nav class="navbar navbar-dark bg-custom-navy sticky-top shadow-sm py-2 px-3">
+        <div class="container-fluid d-flex align-items-center justify-content-between p-0">
             
-            <!-- Botón Hamburguesa -->
-            <button class="navbar-toggler border-0 p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-controls="menuOffcanvas" aria-label="Abrir menú">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <!-- Izquierda: Menú Hamburguesa + Título -->
+            <div class="d-flex align-items-center gap-3">
+                <button class="navbar-toggler border-0 p-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuOffcanvas" aria-controls="menuOffcanvas" aria-label="Abrir menú">
+                    <span class="navbar-toggler-icon" style="width: 1.5em; height: 1.5em;"></span>
+                </button>
+
+                <a class="navbar-brand fw-bold fs-5 m-0 d-flex align-items-center gap-2" href="{{ url_for('home') }}">
+                    <span>💰</span> <span>Finanzas Familiares</span>
+                </a>
+            </div>
+
+            <!-- Derecha: Botón / Desplegable de Alertas -->
+            <div class="dropdown me-2">
+                <button class="btn btn-link text-white position-relative p-2 text-decoration-none border-0" type="button" id="dropdownAlertas" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 1.3rem; line-height: 1;">
+                    🔔
+                    {% if total_alertas > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger fw-bold" style="font-size: 0.7rem; padding: 0.35em 0.55em;">
+                            {{ total_alertas }}
+                        </span>
+                    {% endif %}
+                </button>
+                
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="dropdownAlertas" style="min-width: 290px;">
+                    {% if total_alertas > 0 %}
+                        <li class="dropdown-header fw-bold text-danger d-flex justify-content-between align-items-center fs-6">
+                            <span>⚠️ Próximos Vencimientos</span>
+                            <span class="badge bg-danger">{{ total_alertas }}</span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        {% for alerta in alertas_vencimiento %}
+                            <li class="px-2 py-1">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ alerta.descripcion }}</div>
+                                        <small class="{% if alerta.vencido %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                            {% if alerta.vencido %}
+                                                Venció el día {{ alerta.dia_vencimiento }}
+                                            {% elif alerta.dias_restantes == 0 %}
+                                                Vence hoy
+                                            {% else %}
+                                                Vence el día {{ alerta.dia_vencimiento }} (en {{ alerta.dias_restantes }}d)
+                                            {% endif %}
+                                            — {{ alerta.monto | moneda }}
+                                        </small>
+                                    </div>
+                                    {% if alerta.gasto_id %}
+                                        <a href="{{ url_for('toggle_pago_gasto', id=alerta.gasto_id) }}" class="btn btn-sm btn-outline-success ms-2 px-2 py-1" title="Marcar como pagado">
+                                            ✓
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                        
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-center text-primary fw-bold" style="font-size: 0.9rem;" href="{{ url_for('listar_recurrentes') }}">
+                                Ver todos los recurrentes →
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="px-3 py-2 text-center text-muted" style="font-size: 0.9rem;">
+                            ✅ Todo al día con los pagos recurrentes
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+
         </div>
     </nav>
 
