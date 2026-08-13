@@ -148,14 +148,30 @@ def home():
         Gasto.medio_pago, func.sum(Gasto.monto)
     ).group_by(Gasto.medio_pago).order_by(func.sum(Gasto.monto).desc()).all() 
 
+   # --- CATEGORÍA MÁS FRECUENTE (Gasto Hormiga) ---
+    # 1. Buscamos la categoría con MAYOR CANTIDAD de registros/compras
+    cat_mas_frecuente = gastos_query.with_entities(
+        Gasto.categoria, func.count(Gasto.id).label("frecuencia")
+    ).group_by(Gasto.categoria).order_by(func.count(Gasto.id).desc()).first()
+
     categoria_mas_frecuente = None
-    if gastos_categoria_pct:
-        cat_nom = gastos_categoria_pct[0]["categoria"]
-        cant = gastos_query.filter(Gasto.categoria == cat_nom).count()
+    if cat_mas_frecuente and total_gastos > 0:
+        cat_nom, cant = cat_mas_frecuente
+        
+        # 2. Calculamos el monto total acumulado en esa categoría específica
+        monto_frecuente = db.session.query(func.sum(Gasto.monto)).filter(
+            Gasto.user_id == current_user.id,
+            Gasto.categoria == cat_nom
+        ).scalar() or 0
+        
+        # 3. Calculamos qué % representa sobre el gasto total acumulado en dinero
+        porcentaje_monto = round((monto_frecuente / total_gastos) * 100, 1)
+
         categoria_mas_frecuente = {
             "categoria": cat_nom,
             "cantidad": cant,
-            "porcentaje": gastos_categoria_pct[0]["porcentaje"]
+            "porcentaje": porcentaje_monto,
+            "monto": monto_frecuente
         }
 
     meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).distinct().all()
