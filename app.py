@@ -21,9 +21,9 @@ db = SQLAlchemy(app)
 @app.template_filter('moneda')
 def moneda(valor):
     if valor is None:
-        return "$ 0,00"
+        return "$0,00"
     formatted = f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"$ {formatted}"
+    return f"$\u00A0{formatted}"  # \u00A0 fuerza a que $ y el número vayan siempre juntos
 
 @app.context_processor
 def inject_alertas():
