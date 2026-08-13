@@ -148,7 +148,8 @@ def home():
         Gasto.medio_pago, func.sum(Gasto.monto)
     ).group_by(Gasto.medio_pago).order_by(func.sum(Gasto.monto).desc()).all() 
 
-   # --- CATEGORÍA MÁS FRECUENTE / GASTO HORMIGA ---
+   # --- CATEGORÍA MÁS FRECUENTE (GASTO HORMIGA) ---
+    # Busca la categoría con mayor número de operaciones (COUNT) y obtiene su dinero total (SUM)
     cat_frecuente_db = gastos_query.with_entities(
         Gasto.categoria,
         func.count(Gasto.id).label("frecuencia"),
@@ -158,14 +159,16 @@ def home():
     categoria_mas_frecuente = None
     if cat_frecuente_db and total_gastado > 0:
         cat_nom, cant, monto_cat = cat_frecuente_db
+        monto_cat = monto_cat or 0.0
         
-        # Porcentaje monetario respecto al total gastado
+        # % en DINERO sobre el TOTAL general gastado
         porcentaje_monto = round((monto_cat / total_gastado) * 100, 1)
 
         categoria_mas_frecuente = {
             "categoria": cat_nom,
             "cantidad": cant,
-            "porcentaje": porcentaje_monto
+            "monto": monto_cat,           # Suma de dinero de estos X gastos
+            "porcentaje": porcentaje_monto # % monetario contra el total gastado
         }
 
     meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).distinct().all()

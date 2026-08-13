@@ -60,6 +60,9 @@
                     <span class="text-muted style-micro d-block" style="font-size: 0.7rem;">
                         <strong class="text-danger">{{ categoria_mas_frecuente.cantidad }}</strong> gastos ({{ categoria_mas_frecuente.porcentaje }}%)
                     </span>
+                    <span class="fw-bold text-dark d-block style-micro" style="font-size: 0.72rem;">
+                        {{ categoria_mas_frecuente.monto | moneda }}
+                    </span>
                 {% else %}
                     <span class="text-muted small">Sin datos</span>
                 {% endif %}
