@@ -6,10 +6,8 @@ from sqlalchemy import func
 
 app = Flask(__name__)
 
-# Obtener la URL de conexión (Render / Supabase) o usar SQLite en local por defecto
+# Configuración de Base de Datos (Render / Supabase / Local)
 db_url = os.environ.get("DATABASE_URL", "sqlite:////app/data/finanzas.db")
-
-# Corregir el protocolo si empieza con 'postgres://' (compatibilidad con SQLAlchemy)
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
@@ -18,60 +16,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-@app.template_filter('moneda')
-def moneda(valor):
-    if valor is None:
-        return "$0,00"
-    formatted = f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"$\u00A0{formatted}"  # \u00A0 fuerza a que $ y el número vayan siempre juntos
-
-@app.context_processor
-def inject_alertas():
-    try:
-        hoy = date.today()
-        mes_actual = hoy.strftime("%Y-%m")
-        dia_actual = hoy.day
-
-        # Obtener recurrentes activos
-        recurrentes_activos = GastoRecurrente.query.filter_by(activo=True).all()
-        
-        # Gastos del mes vinculados a recurrentes
-        gastos_mes = Gasto.query.filter(
-            Gasto.fecha.startswith(mes_actual),
-            Gasto.gasto_recurrente_id.isnot(None)
-        ).all()
-
-        # Mapeo de estados del mes
-        pagados_dict = {g.gasto_recurrente_id: g.pagado for g in gastos_mes}
-        generados_dict = {g.gasto_recurrente_id: g for g in gastos_mes}
-
-        alertas = []
-        for rec in recurrentes_activos:
-            esta_pagado = pagados_dict.get(rec.id, False)
-            
-            # Si NO está pagado, evaluamos si ya venció o vence en los próximos 5 días
-            if not esta_pagado:
-                dias_para_vencer = rec.dia_vencimiento - dia_actual
-                
-                # Alerta si vence en 5 días o menos, o si el día ya pasó en este mes
-                if dias_para_vencer <= 5:
-                    alertas.append({
-                        "id": rec.id,
-                        "descripcion": rec.descripcion,
-                        "monto": rec.monto,
-                        "dia_vencimiento": rec.dia_vencimiento,
-                        "vencido": dias_para_vencer < 0,
-                        "dias_restantes": dias_para_vencer,
-                        "gasto_id": generados_dict[rec.id].id if rec.id in generados_dict else None
-                    })
-
-        # Ordenar: primero los ya vencidos y luego los más próximos a vencer
-        alertas.sort(key=lambda x: x["dia_vencimiento"])
-
-        return dict(alertas_vencimiento=alertas, total_alertas=len(alertas))
-    except Exception:
-        return dict(alertas_vencimiento=[], total_alertas=0)
-        
+# --- MODELOS ---
 class Gasto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.String(20))
@@ -95,7 +40,57 @@ class GastoRecurrente(db.Model):
     activo = db.Column(db.Boolean, default=True)
 
 
-# --- FUNCIÓN AUXILIAR DRY PARA OPCIONES DE FORMULARIO ---
+# --- FILTROS Y CONTEXT PROCESSORS ---
+@app.template_filter('moneda')
+def moneda(valor):
+    if valor is None:
+        return "$0,00"
+    formatted = f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"$\u00A0{formatted}"
+
+@app.context_processor
+def inject_alertas():
+    try:
+        hoy = date.today()
+        mes_actual = hoy.strftime("%Y-%m")
+        dia_actual = hoy.day
+
+        recurrentes_activos = GastoRecurrente.query.filter_by(activo=True).all()
+        
+        # Optimización: Solo seleccionamos los campos necesarios de DB
+        gastos_mes = db.session.query(
+            Gasto.gasto_recurrente_id, Gasto.pagado, Gasto.id
+        ).filter(
+            Gasto.fecha.startswith(mes_actual),
+            Gasto.gasto_recurrente_id.isnot(None)
+        ).all()
+
+        pagados_dict = {g[0]: g[1] for g in gastos_mes}
+        generados_dict = {g[0]: g[2] for g in gastos_mes}
+
+        alertas = []
+        for rec in recurrentes_activos:
+            esta_pagado = pagados_dict.get(rec.id, False)
+            if not esta_pagado:
+                dias_para_vencer = rec.dia_vencimiento - dia_actual
+                if dias_para_vencer <= 5:
+                    alertas.append({
+                        "id": rec.id,
+                        "descripcion": rec.descripcion,
+                        "monto": rec.monto,
+                        "dia_vencimiento": rec.dia_vencimiento,
+                        "vencido": dias_para_vencer < 0,
+                        "dias_restantes": dias_para_vencer,
+                        "gasto_id": generados_dict.get(rec.id)
+                    })
+
+        alertas.sort(key=lambda x: x["dia_vencimiento"])
+        return dict(alertas_vencimiento=alertas, total_alertas=len(alertas))
+    except Exception:
+        return dict(alertas_vencimiento=[], total_alertas=0)
+
+
+# --- HELPER DE OPCIONES DE FORMULARIO ---
 def obtener_opciones():
     cat_base = ["Supermercado", "Restaurante", "Alquiler", "Expensas", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales", "Cora", "Auto", "Varios", "combustible"]
     resp_base = ["Joffan", "Dore"]
@@ -111,15 +106,16 @@ def obtener_opciones():
         "medios_pago": sorted(list(set(medios_base + medios_db)))
     }
 
+
+# --- RUTAS PRINCIPALES ---
 @app.route("/")
 def home():
     mes_seleccionado = request.args.get("mes", "todos")
 
     gastos_query = Gasto.query if mes_seleccionado == "todos" else Gasto.query.filter(Gasto.fecha.startswith(mes_seleccionado))
 
-    total_gastado = db.session.query(func.coalesce(func.sum(Gasto.monto), 0)).filter(
-        Gasto.id.in_(gastos_query.with_entities(Gasto.id))
-    ).scalar()
+    # Optimizado: Suma directa sin subconsultas innecesarias
+    total_gastado = gastos_query.with_entities(func.coalesce(func.sum(Gasto.monto), 0.0)).scalar() or 0.0
 
     cantidad_gastos = gastos_query.count()
     ultimos_gastos = gastos_query.order_by(Gasto.id.desc()).limit(5).all()
@@ -148,8 +144,7 @@ def home():
         Gasto.medio_pago, func.sum(Gasto.monto)
     ).group_by(Gasto.medio_pago).order_by(func.sum(Gasto.monto).desc()).all() 
 
-   # --- CATEGORÍA MÁS FRECUENTE (GASTO HORMIGA) ---
-    # Busca la categoría con mayor número de operaciones (COUNT) y obtiene su dinero total (SUM)
+    # --- CATEGORÍA MÁS FRECUENTE (GASTO HORMIGA) ---
     cat_frecuente_db = gastos_query.with_entities(
         Gasto.categoria,
         func.count(Gasto.id).label("frecuencia"),
@@ -160,21 +155,16 @@ def home():
     if cat_frecuente_db and total_gastado > 0:
         cat_nom, cant, monto_cat = cat_frecuente_db
         monto_cat = monto_cat or 0.0
-        
-        # % en DINERO sobre el TOTAL general gastado
-        porcentaje_monto = round((monto_cat / total_gastado) * 100, 1)
-
         categoria_mas_frecuente = {
             "categoria": cat_nom,
             "cantidad": cant,
-            "monto": monto_cat,           # Suma de dinero de estos X gastos
-            "porcentaje": porcentaje_monto # % monetario contra el total gastado
+            "monto": monto_cat,
+            "porcentaje": round((monto_cat / total_gastado) * 100, 1)
         }
 
     meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).distinct().all()
     meses_disponibles = sorted([m[0] for m in meses_db if m[0]], reverse=True)
 
-    # Datos para el gráfico de Barras (últimos 6 meses con nombre de mes)
     nombres_meses = {
         '01':'Enero', '02':'Febrero', '03':'Marzo', '04':'Abril',
         '05':'Mayo', '06':'Junio', '07':'Julio', '08':'Agosto',
@@ -186,12 +176,7 @@ def home():
         func.sum(Gasto.monto).label("total")
     ).group_by("mes").order_by(db.desc("mes")).limit(6).all()
 
-    mes_labels = []
-    for m in reversed(gastos_mes_db):
-        if m[0]:
-            num_mes = m[0][5:7]
-            mes_labels.append(nombres_meses.get(num_mes, m[0]))
-
+    mes_labels = [nombres_meses.get(m[0][5:7], m[0]) for m in reversed(gastos_mes_db) if m[0]]
     mes_totals = [float(m[1]) for m in reversed(gastos_mes_db) if m[0]]
 
     return render_template(
@@ -211,6 +196,7 @@ def home():
         mes_labels=mes_labels,
         mes_totals=mes_totals
     )
+
 @app.route("/nuevo", methods=["GET", "POST"])
 def nuevo_gasto():
     if request.method == "POST":
@@ -234,7 +220,6 @@ def listar_gastos():
     orden = request.args.get('orden', 'fecha')
     direccion = request.args.get('dir', 'desc')
 
-    # Captura de parámetros de búsqueda y filtro
     q = request.args.get('q', '').strip()
     categoria = request.args.get('categoria', '')
     responsable = request.args.get('responsable', '')
@@ -243,7 +228,6 @@ def listar_gastos():
 
     query = Gasto.query
 
-    # Aplicación de filtros dinámicos
     if q:
         query = query.filter(Gasto.descripcion.ilike(f'%{q}%'))
     if categoria:
@@ -255,33 +239,19 @@ def listar_gastos():
     if fecha_hasta:
         query = query.filter(Gasto.fecha <= fecha_hasta)
 
-    # Ordenamiento
     columna_orden = getattr(Gasto, orden, Gasto.fecha)
-    if direccion == 'desc':
-        query = query.order_by(columna_orden.desc())
-    else:
-        query = query.order_by(columna_orden.asc())
+    query = query.order_by(columna_orden.desc() if direccion == 'desc' else columna_orden.asc())
 
     gastos = query.paginate(page=pagina, per_page=10)
-
-    # Consulta directa de valores únicos cargados en la base de datos
-    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
-    responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
-
-    # Si la tabla de gastos está vacía o querés listas por defecto, podés usar estas de respaldo:
-    if not categorias:
-        categorias = ["Supermercado", "Restaurante", "Alquiler", "Agua", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales"]
-    
-    if not responsables:
-        responsables = ["Joffan", "Dore"]
+    opciones = obtener_opciones()
 
     return render_template(
         'gastos.html',
         gastos=gastos,
         orden=orden,
         direccion=direccion,
-        categorias=sorted(categorias),
-        responsables=sorted(responsables),
+        categorias=opciones["categorias"],
+        responsables=opciones["responsables"],
         q=q,
         categoria_sel=categoria,
         responsable_sel=responsable,
@@ -313,7 +283,6 @@ def eliminar_gasto(id):
 
 @app.route("/reportes")
 def reportes():
-    # Agrupación por mes directamente en SQLite
     gastos_db = db.session.query(
         func.substr(Gasto.fecha, 1, 7).label("mes"),
         func.sum(Gasto.monto)
@@ -333,7 +302,7 @@ def reportes():
     if len(gastos_por_mes) >= 2:
         mes_act, mes_ant = gastos_por_mes[0][0], gastos_por_mes[1][0]
 
-        # --- COMPARATIVO POR CATEGORÍA ---
+        # Categorías
         cat_actual = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.fecha.startswith(mes_act)).group_by(Gasto.categoria).all())
         cat_anterior = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.fecha.startswith(mes_ant)).group_by(Gasto.categoria).all())
 
@@ -356,20 +325,18 @@ def reportes():
 
         comparativo_categorias.sort(key=lambda x: abs(x["variacion"]), reverse=True)
 
-        # --- COMPARATIVO DE GASTOS RECURRENTES ---
-        recurrentes = GastoRecurrente.query.all()
+        # Optimización: Carga masiva en 2 consultas SQL agrupadas
+        rec_act = dict(db.session.query(Gasto.gasto_recurrente_id, func.sum(Gasto.monto)).filter(
+            Gasto.fecha.startswith(mes_act), Gasto.gasto_recurrente_id.isnot(None)
+        ).group_by(Gasto.gasto_recurrente_id).all())
 
-        for rec in recurrentes:
-            tot_act = db.session.query(func.sum(Gasto.monto)).filter(
-                Gasto.fecha.startswith(mes_act),
-                Gasto.gasto_recurrente_id == rec.id
-            ).scalar() or 0.0
+        rec_ant = dict(db.session.query(Gasto.gasto_recurrente_id, func.sum(Gasto.monto)).filter(
+            Gasto.fecha.startswith(mes_ant), Gasto.gasto_recurrente_id.isnot(None)
+        ).group_by(Gasto.gasto_recurrente_id).all())
 
-            tot_ant = db.session.query(func.sum(Gasto.monto)).filter(
-                Gasto.fecha.startswith(mes_ant),
-                Gasto.gasto_recurrente_id == rec.id
-            ).scalar() or 0.0
-
+        for rec in GastoRecurrente.query.all():
+            tot_act = rec_act.get(rec.id, 0.0)
+            tot_ant = rec_ant.get(rec.id, 0.0)
             dif_rec = tot_act - tot_ant
             var_rec = round((dif_rec / tot_ant) * 100, 1) if tot_ant > 0 else (100.0 if tot_act > 0 else 0.0)
 
@@ -394,16 +361,20 @@ def reportes():
         comparativo_categorias=comparativo_categorias,
         comparativo_recurrentes=comparativo_recurrentes
     )
-# --- RUTAS DE GASTOS RECURRENTES ---
 
+
+# --- RUTAS DE RECURRENTES Y RÁPIDAS ---
 @app.route("/recurrentes")
 def listar_recurrentes():
     mes_actual = datetime.now().strftime("%Y-%m")
     recurrentes = GastoRecurrente.query.order_by(GastoRecurrente.descripcion).all()
-    gastos_mes = Gasto.query.filter(Gasto.fecha.startswith(mes_actual)).all()
+    
+    gastos_mes = db.session.query(Gasto.gasto_recurrente_id, Gasto.pagado, Gasto.id).filter(
+        Gasto.fecha.startswith(mes_actual), Gasto.gasto_recurrente_id.isnot(None)
+    ).all()
 
-    pagados_mes_ids = {g.gasto_recurrente_id: g.pagado for g in gastos_mes if g.gasto_recurrente_id}
-    generados_mes_ids = {g.gasto_recurrente_id: g.id for g in gastos_mes if g.gasto_recurrente_id}
+    pagados_mes_ids = {g[0]: g[1] for g in gastos_mes}
+    generados_mes_ids = {g[0]: g[2] for g in gastos_mes}
 
     return render_template("recurrentes.html", recurrentes=recurrentes, pagados_mes_ids=pagados_mes_ids, generados_mes_ids=generados_mes_ids)
 
@@ -482,49 +453,29 @@ def toggle_pago_gasto(id):
     db.session.commit()
     return redirect(request.referrer or url_for("listar_gastos"))
 
-
 @app.route('/rapido', methods=['GET', 'POST'])
 def carga_rapida():
     if request.method == 'POST':
-        fecha = request.form.get('fecha') or date.today().strftime('%Y-%m-%d')
-        descripcion = request.form.get('descripcion')
-        monto = float(request.form.get('monto', 0))
-        categoria = request.form.get('categoria')
-        responsable = request.form.get('responsable')
-        medio_pago = request.form.get('medio_pago')
-
         nuevo_gasto = Gasto(
-            fecha=fecha,
-            descripcion=descripcion,
-            monto=monto,
-            categoria=categoria,
-            responsable=responsable,
-            medio_pago=medio_pago
+            fecha=request.form.get('fecha') or date.today().strftime('%Y-%m-%d'),
+            descripcion=request.form.get('descripcion'),
+            monto=float(request.form.get('monto', 0)),
+            categoria=request.form.get('categoria'),
+            responsable=request.form.get('responsable'),
+            medio_pago=request.form.get('medio_pago')
         )
         db.session.add(nuevo_gasto)
         db.session.commit()
         return redirect(url_for('listar_gastos'))
 
-    # Opciones dinámicas de la base de datos
-    categorias = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
-    responsables = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
-    medios_pago = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
-
-    # Respaldos
-    if not categorias:
-        categorias = ["Supermercado", "Restaurante", "Transporte", "Gastos Personales"]
-    if not responsables:
-        responsables = ["Joffan", "Dore"]
-    if not medios_pago:
-        medios_pago = ["Efectivo", "Debito", "Credito", "Mercado Pago"]
-
-    fecha_hoy = date.today().strftime('%Y-%m-%d')
+    # Reutilizamos obtener_opciones()
+    opciones = obtener_opciones()
     return render_template(
         'carga_rapida.html',
-        fecha_hoy=fecha_hoy,
-        categorias=sorted(categorias),
-        responsables=sorted(responsables),
-        medios_pago=sorted(medios_pago)
+        fecha_hoy=date.today().strftime('%Y-%m-%d'),
+        categorias=opciones["categorias"],
+        responsables=opciones["responsables"],
+        medios_pago=opciones["medios_pago"]
     )
 
 with app.app_context():
@@ -532,3 +483,4 @@ with app.app_context():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+    
