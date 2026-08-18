@@ -1,6 +1,6 @@
 import os, secrets  
 from datetime import datetime, date
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
