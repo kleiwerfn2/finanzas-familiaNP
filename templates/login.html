@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Control de Gastos</title>
+    <link href="https://cdn.jsdelivr.net/style/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center vh-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h4 class="card-title text-center mb-4 font-weight-bold">Iniciar Sesión</h4>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                          {% if messages %}
+                            {% for category, message in messages %}
+                              <div class="alert alert-{{ category }} text-center py-2" role="alert">
+                                {{ message }}
+                              </div>
+                            {% endfor %}
+                          {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" action="{{ url_for('login') }}">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="email" name="email" required placeholder="tu@email.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 fw-bold">Ingresar</button>
+                        </form>
+                        <hr class="my-4">
+                        <div class="text-center">
+                            <small class="text-muted">¿No tienes cuenta? <a href="{{ url_for('registro') }}">Registrar mi familia</a></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Control de Gastos</title>
+    <link href="https://cdn.jsdelivr.net/style/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex align-items-center min-vh-100 py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <h4 class="card-title text-center mb-4">Registro de Usuario</h4>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                          {% if messages %}
+                            {% for category, message in messages %}
+                              <div class="alert alert-{{ category }} text-center py-2" role="alert">
+                                {{ message }}
+                              </div>
+                            {% endfor %}
+                          {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" action="{{ url_for('registro') }}">
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Tu Nombre</label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="email" name="email" required placeholder="tu@email.com">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Contraseña</label>
+                                <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
+                            </div>
+
+                            <hr class="my-4">
+                            <h6 class="fw-bold mb-3">Vínculo Familiar</h6>
+                            
+                            <div class="mb-3">
+                                <label for="tipo_registro" class="form-label">¿Qué deseas hacer?</label>
+                                <select class="form-select" id="tipo_registro" name="tipo_registro" onchange="toggleFamiliaOp(this.value)">
+                                    <option value="crear">Crear una nueva familia</option>
+                                    <option value="unirse">Unirme a una familia existente con un código</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="group_nombre_familia">
+                                <label for="nombre_familia" class="form-label">Nombre de tu Familia</label>
+                                <input type="text" class="form-control" id="nombre_familia" name="nombre_familia" placeholder="Ej. Familia Rodríguez">
+                            </div>
+
+                            <div class="mb-3 d-none" id="group_codigo_invitacion">
+                                <label for="codigo_invitacion" class="form-label">Código de Invitación</label>
+                                <input type="text" class="form-control text-uppercase" id="codigo_invitacion" name="codigo_invitacion" placeholder="Ej. A1B2C3D4">
+                            </div>
+
+                            <button type="submit" class="btn btn-success w-100 fw-bold mt-3">Completar Registro</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <small class="text-muted">¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Iniciar Sesión</a></small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleFamiliaOp(valor) {
+            const grpNombre = document.getElementById('group_nombre_familia');
+            const grpCodigo = document.getElementById('group_codigo_invitacion');
+            if (valor === 'crear') {
+                grpNombre.classList.remove('d-none');
+                grpCodigo.classList.add('d-none');
+            } else {
+                grpNombre.classList.add('d-none');
+                grpCodigo.classList.remove('d-none');
+            }
+        }
+    </script>
+</body>
+</html>

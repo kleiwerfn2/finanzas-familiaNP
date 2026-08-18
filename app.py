@@ -73,28 +73,52 @@ class GastoRecurrente(db.Model):
     activo = db.Column(db.Boolean, default=True)
     familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True) # nullable=True temporal para migración
 
-# --- AUTO-MIGRACIÓN PARA PASO 1 ---
+# --- MIGRACIÓN DE DATOS INICIALES (PASO 2) ---
 with app.app_context():
-    # 1. Crear las tablas nuevas (Familia y Usuario)
     db.create_all()
 
-    # 2. Agregar la columna familia_id en SQLite si no existe
     from sqlalchemy import inspect, text
     inspector = inspect(db.engine)
     
-    # Migrar tabla gasto
+    # 1. Asegurar columnas familia_id
     columnas_gasto = [c['name'] for c in inspector.get_columns('gasto')]
     if 'familia_id' not in columnas_gasto:
         with db.engine.connect() as conn:
             conn.execute(text("ALTER TABLE gasto ADD COLUMN familia_id INTEGER REFERENCES familia(id)"))
             conn.commit()
 
-    # Migrar tabla gasto_recurrente
     columnas_recurrente = [c['name'] for c in inspector.get_columns('gasto_recurrente')]
     if 'familia_id' not in columnas_recurrente:
         with db.engine.connect() as conn:
             conn.execute(text("ALTER TABLE gasto_recurrente ADD COLUMN familia_id INTEGER REFERENCES familia(id)"))
             conn.commit()
+
+    # 2. Crear Familia inicial si no existe ninguna
+    familia_base = Familia.query.first()
+    if not familia_base:
+        codigo_unico = secrets.token_hex(4).upper()
+        familia_base = Familia(nombre="Familia Principal", codigo_invitacion=codigo_unico)
+        db.session.add(familia_base)
+        db.session.commit()
+        print(f"--> Familia creada con éxito! Código de invitación: {codigo_unico}")
+
+    # 3. Crear Usuario inicial asociado a la familia
+    usuario_base = Usuario.query.first()
+    if not usuario_base:
+        usuario_base = Usuario(
+            nombre="Admin",
+            email="admin@familia.com",
+            familia_id=familia_base.id
+        )
+        usuario_base.set_password("admin123")  # Contraseña inicial temporal
+        db.session.add(usuario_base)
+        db.session.commit()
+        print("--> Usuario creado con éxito! Email: admin@familia.com | Pass: admin123")
+
+    # 4. Asignar todos los gastos huérfanos a la Familia Principal
+    Gasto.query.filter(Gasto.familia_id.is_(None)).update({Gasto.familia_id: familia_base.id}, synchronize_session=False)
+    GastoRecurrente.query.filter(GastoRecurrente.familia_id.is_(None)).update({GastoRecurrente.familia_id: familia_base.id}, synchronize_session=False)
+    db.session.commit()
 
 # --- FILTROS Y CONTEXT PROCESSORS ---
 @app.template_filter('moneda')
@@ -162,6 +186,77 @@ def obtener_opciones():
         "medios_pago": sorted(list(set(medios_base + medios_db)))
     }
 
+# --- RUTAS DE AUTENTICACIÓN (PASO 3) ---
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+        
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        usuario = Usuario.query.filter_by(email=email).first()
+
+        if usuario and usuario.check_password(password):
+            login_user(usuario)
+            flash("Sesión iniciada correctamente.", "success")
+            return redirect(url_for("home"))
+
+        flash("Correo electrónico o contraseña incorrectos.", "danger")
+
+    return render_template("login.html")
+
+@app.route("/registro", methods=["GET", "POST"])
+def registro():
+    if current_user.is_authenticated:
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        nombre = request.form.get("nombre")
+        email = request.form.get("email")
+        password = request.form.get("password")
+        tipo_registro = request.form.get("tipo_registro")
+
+        if Usuario.query.filter_by(email=email).first():
+            flash("El correo electrónico ya está registrado.", "warning")
+            return render_template("registro.html")
+
+        if tipo_registro == "crear":
+            nombre_familia = request.form.get("nombre_familia", "Mi Familia")
+            codigo = secrets.token_hex(4).upper()
+            nueva_familia = Familia(nombre=nombre_familia, codigo_invitacion=codigo)
+            db.session.add(nueva_familia)
+            db.session.commit()
+            familia_target = nueva_familia
+        else:
+            codigo = request.form.get("codigo_invitacion", "").strip().upper()
+            familia_target = Familia.query.filter_by(codigo_invitacion=codigo).first()
+            if not familia_target:
+                flash("El código de invitación ingresado es inválido.", "danger")
+                return render_template("registro.html")
+
+        nuevo_usuario = Usuario(
+            nombre=nombre,
+            email=email,
+            familia_id=familia_target.id
+        )
+        nuevo_usuario.set_password(password)
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+
+        login_user(nuevo_usuario)
+        flash("¡Cuenta y familia registradas con éxito!", "success")
+        return redirect(url_for("home"))
+
+    return render_template("registro.html")
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("Has cerrado sesión.", "info")
+    return redirect(url_for("login"))
 
 # --- RUTAS PRINCIPALES ---
 @app.route("/")
