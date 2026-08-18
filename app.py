@@ -1,8 +1,10 @@
-import os
+import os, secrets  
 from datetime import datetime, date
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -16,17 +18,48 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
 
-# --- MODELOS ---
+login_manager = LoginManager(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
+
+# --- MODELOS MULTIUSUARIO / MULTIFAMILIA ---
+
+class Familia(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    codigo_invitacion = db.Column(db.String(20), unique=True, nullable=False)
+
+    usuarios = db.relationship('Usuario', backref='familia', lazy=True)
+    gastos = db.relationship('Gasto', backref='familia', lazy=True)
+    recurrentes = db.relationship('GastoRecurrente', backref='familia', lazy=True)
+
+class Usuario(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 class Gasto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    fecha = db.Column(db.String(20))
+    fecha = db.Column(db.String(20), index=True)
     descripcion = db.Column(db.String(200))
     monto = db.Column(db.Float)
-    categoria = db.Column(db.String(50))
+    categoria = db.Column(db.String(50), index=True)
     responsable = db.Column(db.String(50))
     medio_pago = db.Column(db.String(50))
-    gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True)
+    gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True, index=True)
     pagado = db.Column(db.Boolean, default=False)  
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True) # nullable=True temporal para migración
     recurrente = db.relationship('GastoRecurrente', backref='gastos_generados', lazy=True)
 
 class GastoRecurrente(db.Model):
@@ -38,7 +71,30 @@ class GastoRecurrente(db.Model):
     medio_pago = db.Column(db.String(100), nullable=False)
     dia_vencimiento = db.Column(db.Integer, nullable=False)
     activo = db.Column(db.Boolean, default=True)
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True) # nullable=True temporal para migración
 
+# --- AUTO-MIGRACIÓN PARA PASO 1 ---
+with app.app_context():
+    # 1. Crear las tablas nuevas (Familia y Usuario)
+    db.create_all()
+
+    # 2. Agregar la columna familia_id en SQLite si no existe
+    from sqlalchemy import inspect, text
+    inspector = inspect(db.engine)
+    
+    # Migrar tabla gasto
+    columnas_gasto = [c['name'] for c in inspector.get_columns('gasto')]
+    if 'familia_id' not in columnas_gasto:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE gasto ADD COLUMN familia_id INTEGER REFERENCES familia(id)"))
+            conn.commit()
+
+    # Migrar tabla gasto_recurrente
+    columnas_recurrente = [c['name'] for c in inspector.get_columns('gasto_recurrente')]
+    if 'familia_id' not in columnas_recurrente:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE gasto_recurrente ADD COLUMN familia_id INTEGER REFERENCES familia(id)"))
+            conn.commit()
 
 # --- FILTROS Y CONTEXT PROCESSORS ---
 @app.template_filter('moneda')
