@@ -1,24 +1,33 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-<h3 class="mb-4">⚙️ Configuración de Parámetros</h3>
 
-<div class="row g-4">
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 fw-bold mb-0">⚙️ Parámetros del Sistema</h1>
+</div>
+
+<div class="row g-3">
     <!-- CATEGORÍAS -->
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">🏷️ Categorías</h5>
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-2">
+                <h6 class="mb-0 fw-bold">🏷️ Categorías</h6>
+                <span class="badge bg-white text-primary rounded-pill">{{ categorias | length }}</span>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 <form method="POST" class="d-flex gap-2 mb-3">
                     <input type="hidden" name="tipo" value="categoria">
-                    <input type="text" name="nombre" class="form-control" placeholder="Nueva categoría..." required>
-                    <button type="submit" class="btn btn-success">➕</button>
+                    <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nueva categoría..." required>
+                    <button type="submit" class="btn btn-sm btn-success fw-bold px-3">➕</button>
                 </form>
-                <ul class="list-group">
+                
+                <ul class="list-group list-group-flush border-top">
                     {% for cat in categorias %}
-                        <li class="list-group-item">{{ cat }}</li>
+                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center fs-7">
+                            <span>{{ cat }}</span>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item px-0 py-2 text-muted small text-center">Sin categorías guardadas</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -26,20 +35,26 @@
     </div>
 
     <!-- RESPONSABLES -->
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">👤 Responsables</h5>
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center py-2">
+                <h6 class="mb-0 fw-bold">👤 Responsables</h6>
+                <span class="badge bg-white text-secondary rounded-pill">{{ responsables | length }}</span>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 <form method="POST" class="d-flex gap-2 mb-3">
                     <input type="hidden" name="tipo" value="responsable">
-                    <input type="text" name="nombre" class="form-control" placeholder="Nuevo responsable..." required>
-                    <button type="submit" class="btn btn-success">➕</button>
+                    <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nuevo responsable..." required>
+                    <button type="submit" class="btn btn-sm btn-success fw-bold px-3">➕</button>
                 </form>
-                <ul class="list-group">
+
+                <ul class="list-group list-group-flush border-top">
                     {% for resp in responsables %}
-                        <li class="list-group-item">{{ resp }}</li>
+                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center fs-7">
+                            <span>{{ resp }}</span>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item px-0 py-2 text-muted small text-center">Sin responsables guardados</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -47,24 +62,31 @@
     </div>
 
     <!-- MEDIOS DE PAGO -->
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">💳 Medios de Pago</h5>
+    <div class="col-12 col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
+                <h6 class="mb-0 fw-bold">💳 Medios de Pago</h6>
+                <span class="badge bg-white text-dark rounded-pill">{{ medios_pago | length }}</span>
             </div>
-            <div class="card-body">
+            <div class="card-body p-3">
                 <form method="POST" class="d-flex gap-2 mb-3">
                     <input type="hidden" name="tipo" value="medio_pago">
-                    <input type="text" name="nombre" class="form-control" placeholder="Nuevo medio de pago..." required>
-                    <button type="submit" class="btn btn-success">➕</button>
+                    <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nuevo medio de pago..." required>
+                    <button type="submit" class="btn btn-sm btn-success fw-bold px-3">➕</button>
                 </form>
-                <ul class="list-group">
+
+                <ul class="list-group list-group-flush border-top">
                     {% for med in medios_pago %}
-                        <li class="list-group-item">{{ med }}</li>
+                        <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center fs-7">
+                            <span>{{ med }}</span>
+                        </li>
+                    {% else %}
+                        <li class="list-group-item px-0 py-2 text-muted small text-center">Sin medios de pago guardados</li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

@@ -2,12 +2,9 @@
 
 {% block contenido %}
 
-<!-- Cargamos la librería Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <!-- ENCABEZADO Y FILTRO DE PERÍODO -->
 <div class="d-flex flex-row justify-content-between align-items-center gap-2 mb-2">
-    <h2 class="mb-0 fw-bold">💰 Dashboard</h2>
+    <h1 class="h3 fw-bold mb-0">💰 Dashboard</h1>
 
     <form method="get" class="d-flex align-items-center gap-1">
         <label class="fw-bold small d-none d-sm-inline mb-0">📅 Período:</label>
@@ -18,24 +15,26 @@
 
             {% set nombres_meses = {'01':'Enero','02':'Febrero','03':'Marzo','04':'Abril','05':'Mayo','06':'Junio','07':'Julio','08':'Agosto','09':'Septiembre','10':'Octubre','11':'Noviembre','12':'Diciembre'} %}
 
-            {% for mes in meses_disponibles %}
-                {% set numero_mes = mes[5:7] %}
+            {% for mes in meses_disponibles or [] %}
+                {% set numero_mes = mes[5:7] if mes and mes|length >= 7 else '' %}
                 <option value="{{ mes }}" {% if mes == mes_seleccionado %}selected{% endif %}>
-                    📅 {{ nombres_meses[numero_mes] }} {{ mes[:4] }}
+                    📅 {{ nombres_meses.get(numero_mes, mes) }} {{ mes[:4] }}
                 </option>
             {% endfor %}
         </select>
     </form>
 </div>
 
-<!-- TARJETAS RESUMEN KPI (Compactas, sin scroll, 3 columnas fijas) -->
+<!-- TARJETAS RESUMEN KPI -->
 <div class="row g-2 mb-3">
     
     <div class="col-4">
         <div class="card shadow-sm h-100 border-0 bg-white">
             <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                 <span class="text-muted fw-bold small d-block mb-1 text-truncate">Total Gastado</span>
-                <span class="text-success fw-bold fs-7 fs-sm-5 text-nowrap">{{ total_gastado | moneda }}</span>
+                <span class="text-success fw-bold fs-7 fs-sm-5 text-nowrap">
+                    {{ total_gastado | moneda if total_gastado is defined else 0 | moneda }}
+                </span>
             </div>
         </div>
     </div>
@@ -44,7 +43,7 @@
         <div class="card shadow-sm h-100 border-0 bg-white">
             <div class="card-body p-2 text-center d-flex flex-column justify-content-center">
                 <span class="text-muted fw-bold small d-block mb-1 text-truncate">Cant. Gastos</span>
-                <span class="text-primary fw-bold fs-6 fs-sm-5">{{ cantidad_gastos }}</span>
+                <span class="text-primary fw-bold fs-6 fs-sm-5">{{ cantidad_gastos | default(0) }}</span>
             </div>
         </div>
     </div>
@@ -57,10 +56,10 @@
                     <span class="text-danger fw-bold text-truncate d-block small" title="{{ categoria_mas_frecuente.categoria }}">
                         {{ categoria_mas_frecuente.categoria }}
                     </span>
-                    <span class="text-muted style-micro d-block" style="font-size: 0.7rem;">
+                    <span class="text-muted d-block" style="font-size: 0.7rem;">
                         <strong class="text-danger">{{ categoria_mas_frecuente.cantidad }}</strong> gastos ({{ categoria_mas_frecuente.porcentaje }}%)
                     </span>
-                    <span class="fw-bold text-dark d-block style-micro" style="font-size: 0.72rem;">
+                    <span class="fw-bold text-dark d-block" style="font-size: 0.72rem;">
                         {{ categoria_mas_frecuente.monto | moneda }}
                     </span>
                 {% else %}
@@ -73,10 +72,10 @@
 </div>
 
 <!-- TOP POR CATEGORÍA -->
-<h5 class="fw-bold mt-2 mb-2">📊 Top por Categoría</h5>
-<div class="table-responsive mb-3">
-    <table class="table table-sm table-striped table-hover shadow-sm align-middle mb-0">
-        <thead>
+<h5 class="fw-bold mt-2 mb-2 fs-6">📊 Top por Categoría</h5>
+<div class="table-responsive mb-3 shadow-sm rounded">
+    <table class="table table-sm table-striped table-hover align-middle mb-0">
+        <thead class="table-dark">
             <tr>
                 <th>Categoría</th>
                 <th>Total</th>
@@ -84,13 +83,13 @@
             </tr>
         </thead>
         <tbody>
-            {% for item in gastos_categoria_pct %}
+            {% for item in gastos_categoria_pct or [] %}
             <tr {% if loop.first %}class="table-warning"{% endif %}>
-                <td>{{ item.categoria }}</td>
-                <td class="fw-semibold">{{ item.total | moneda }}</td>
-                <td style="min-width: 130px; width: 220px;">
+                <td class="fw-semibold text-truncate" style="max-width: 140px;">{{ item.categoria }}</td>
+                <td class="fw-semibold text-nowrap">{{ item.total | moneda }}</td>
+                <td style="min-width: 120px;">
                     <div class="d-flex align-items-center">
-                        <div class="progress flex-grow-1 me-2" style="height: 10px;">
+                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
                             <div class="progress-bar bg-success" 
                                  role="progressbar" 
                                  style="width: {{ item.porcentaje | round(1) }}%;"
@@ -103,17 +102,21 @@
                     </div>
                 </td>
             </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center py-3 text-muted">Sin gastos registrados en este período.</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- SECCIÓN DE GRÁFICOS INTERACTIVOS (Optimizado alto) -->
+<!-- SECCIÓN DE GRÁFICOS INTERACTIVOS -->
 <div class="row g-2 my-2">
     <div class="col-md-6 mb-2">
         <div class="card shadow-sm p-2 h-100 border-0">
             <h6 class="text-center text-muted fw-bold mb-1 small">🍩 Gastos por Categoría</h6>
-            <div class="chart-container">
+            <div class="chart-container" style="position: relative; height:200px;">
                 <canvas id="chartCategorias"></canvas>
             </div>
         </div>
@@ -121,29 +124,132 @@
     <div class="col-md-6 mb-2">
         <div class="card shadow-sm p-2 h-100 border-0">
             <h6 class="text-center text-muted fw-bold mb-1 small">📊 Evolución Mensual</h6>
-            <div class="chart-container">
+            <div class="chart-container" style="position: relative; height:200px;">
                 <canvas id="chartEvolucion"></canvas>
             </div>
         </div>
     </div>
 </div>
 
+<!-- DISTRIBUCIÓN SECUNDARIA (RESPONSABLES Y MEDIOS DE PAGO) -->
+<div class="row g-2 mb-3">
+    <!-- DISTRIBUCIÓN POR RESPONSABLE -->
+    <div class="col-md-6">
+        <h5 class="fw-bold mt-2 mb-2 fs-6">👥 Por Responsable</h5>
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-sm table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Responsable</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in gastos_responsable or [] %}
+                    <tr>
+                        <td>{{ item[0] if item is sequence and item is not string else item.responsable|default(item) }}</td>
+                        <td class="fw-semibold text-end text-nowrap">
+                            {{ (item[1] if item is sequence and item is not string else item.total|default(0)) | moneda }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="text-center py-2 text-muted">Sin datos.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- DISTRIBUCIÓN POR MEDIO DE PAGO -->
+    <div class="col-md-6">
+        <h5 class="fw-bold mt-2 mb-2 fs-6">💳 Por Medio de Pago</h5>
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-sm table-striped table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Medio de Pago</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in gastos_medio_pago or [] %}
+                    <tr>
+                        <td>{{ item[0] if item is sequence and item is not string else item.medio_pago|default(item) }}</td>
+                        <td class="fw-semibold text-end text-nowrap">
+                            {{ (item[1] if item is sequence and item is not string else item.total|default(0)) | moneda }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="text-center py-2 text-muted">Sin datos.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ÚLTIMOS GASTOS -->
+<h5 class="fw-bold mt-3 mb-2 fs-6">📋 Últimos Gastos Cargados</h5>
+<div class="table-responsive mb-3 shadow-sm rounded">
+    <table class="table table-sm table-striped table-hover align-middle mb-0">
+        <thead class="table-dark">
+            <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th class="text-end">Monto</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for gasto in ultimos_gastos or [] %}
+            <tr>
+                <td class="text-nowrap"><small class="text-muted">{{ gasto.fecha }}</small></td>
+                <td class="fw-semibold text-truncate" style="max-width: 180px;">{{ gasto.descripcion }}</td>
+                <td class="fw-bold text-end text-nowrap">{{ gasto.monto | moneda }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center py-3 text-muted">No hay movimientos recientes.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- INYECCIÓN DE DATOS PARA SCRIPTS -->
 <script id="chart-data" type="application/json">
 {
-  "cat_labels": {{ cat_labels | tojson }},
-  "cat_totals": {{ cat_totals | tojson }},
-  "mes_labels": {{ mes_labels | tojson }},
-  "mes_totals": {{ mes_totals | tojson }}
+  "cat_labels": {{ (cat_labels | default([])) | tojson }},
+  "cat_totals": {{ (cat_totals | default([])) | tojson }},
+  "mes_labels": {{ (mes_labels | default([])) | tojson }},
+  "mes_totals": {{ (mes_totals | default([])) | tojson }}
 }
 </script>
 
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+        const chartDataElement = document.getElementById('chart-data');
+        if (!chartDataElement) return;
+        
+        let chartData = { cat_labels: [], cat_totals: [], mes_labels: [], mes_totals: [] };
+        try {
+            chartData = JSON.parse(chartDataElement.textContent);
+        } catch (e) {
+            console.error("Error interpretando los datos del gráfico:", e);
+        }
+
         const ctxCat = document.getElementById('chartCategorias')?.getContext('2d');
         const ctxEvo = document.getElementById('chartEvolucion')?.getContext('2d');
 
-        if (ctxCat) {
+        if (ctxCat && chartData.cat_labels && chartData.cat_labels.length > 0) {
             new Chart(ctxCat, {
                 type: 'doughnut',
                 data: {
@@ -166,7 +272,7 @@
             });
         }
 
-        if (ctxEvo) {
+        if (ctxEvo && chartData.mes_labels && chartData.mes_labels.length > 0) {
             new Chart(ctxEvo, {
                 type: 'bar',
                 data: {
@@ -174,7 +280,8 @@
                     datasets: [{
                         label: 'Total ($)',
                         data: chartData.mes_totals,
-                        backgroundColor: '#0d6efd'
+                        backgroundColor: '#0d6efd',
+                        borderRadius: 4
                     }]
                 },
                 options: {
@@ -182,76 +289,15 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
             });
         }
     });
 </script>
-
-<!-- DISTRIBUCIÓN POR RESPONSABLE -->
-<h5 class="fw-bold mt-3 mb-2">👥 Distribución por Responsable</h5>
-<div class="table-responsive mb-3">
-    <table class="table table-sm table-striped table-hover shadow-sm mb-0">
-        <thead>
-            <tr>
-                <th>Responsable</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for responsable, total in gastos_responsable %}
-            <tr>
-                <td>{{ responsable }}</td>
-                <td class="fw-semibold">{{ total | moneda }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- DISTRIBUCIÓN POR MEDIO DE PAGO -->
-<h5 class="fw-bold mt-3 mb-2">💳 Distribución por Medio de Pago</h5>
-<div class="table-responsive mb-3">
-    <table class="table table-sm table-striped table-hover shadow-sm mb-0">
-        <thead>
-            <tr>
-                <th>Medio de Pago</th>
-                <th>Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for medio_pago, total in gastos_medio_pago %}
-            <tr>
-                <td>{{ medio_pago }}</td>
-                <td class="fw-semibold">{{ total | moneda }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<!-- ÚLTIMOS GASTOS -->
-<h5 class="fw-bold mt-3 mb-2">📋 Últimos Gastos</h5>
-<div class="table-responsive mb-3">
-    <table class="table table-sm table-striped table-hover shadow-sm mb-0">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Descripción</th>
-                <th>Monto</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for gasto in ultimos_gastos %}
-            <tr>
-                <td>{{ gasto.fecha }}</td>
-                <td>{{ gasto.descripcion }}</td>
-                <td class="fw-semibold">{{ gasto.monto | moneda }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
 {% endblock %}

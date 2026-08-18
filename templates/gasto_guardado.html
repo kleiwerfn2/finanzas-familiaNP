@@ -2,42 +2,44 @@
 
 {% block contenido %}
 
-<div class="row justify-content-center mt-5">
+<div class="row justify-content-center mt-3 mt-md-4">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
 
-    <div class="col-md-8 col-lg-6">
-
-        <div class="card shadow border-0">
-
-            <div class="card-body text-center p-5">
-                <div style="font-size:70px">
+        <div class="card shadow-sm border-0 text-center">
+            <div class="card-body p-4 p-md-5">
+                
+                <!-- ICONO Y MENSAJE DE ÉXITO -->
+                <div class="display-1 text-success mb-2">
                     ✅
                 </div>
 
-                <h2 class="text-success mt-3">
-                    Gasto guardado correctamente
+                <h2 class="h4 fw-bold text-success mb-2">
+                    ¡Gasto guardado correctamente!
                 </h2>
 
-                <p class="mt-3">
-                    ¿Qué deseas hacer ahora?
+                <p class="text-muted mb-4 small">
+                    El registro se actualizó correctamente. ¿Qué deseas hacer ahora?
                 </p>
 
-                <hr>
+                <hr class="my-3 opacity-25">
 
-                <div class="d-grid gap-3">
-                    <a class="btn btn-primary" href="{{ url_for('nuevo_gasto') }}">
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="d-grid gap-2">
+                    <a class="btn btn-primary fw-bold py-2" href="{{ url_for('nuevo_gasto') }}">
                         ➕ Registrar otro gasto
                     </a>
-                    <a class="btn btn-outline-secondary" href="{{ url_for('listar_gastos') }}">
+                    <a class="btn btn-outline-secondary fw-semibold py-2" href="{{ url_for('listar_gastos') }}">
                         📋 Ver todos los gastos
+                    </a>
+                    <a class="btn btn-link text-decoration-none text-muted small mt-1" href="{{ url_for('home') }}">
+                        🏠 Volver al Dashboard
                     </a>
                 </div>
 
             </div>
-
         </div>
 
     </div>
-
 </div>
 
 {% endblock %}

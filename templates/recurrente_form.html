@@ -4,39 +4,48 @@
 
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0 fw-bold">
                     {{ '✏️ Editar Gasto Recurrente' if recurrente else '➕ Nuevo Gasto Recurrente' }}
                 </h4>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 <form method="POST">
                     
+                    <!-- Descripción -->
                     <div class="mb-3">
-                        <label class="form-label font-weight-bold">Descripción</label>
+                        <label for="descripcion" class="form-label fw-bold">Descripción</label>
                         <input type="text" 
+                               id="descripcion"
                                name="descripcion" 
                                class="form-control" 
                                placeholder="Ej: Alquiler, Expensas, Netflix"
                                value="{{ recurrente.descripcion if recurrente else '' }}" 
-                               required>
+                               required 
+                               autofocus>
                     </div>
 
+                    <!-- Monto y Día de Vencimiento -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Monto ($)</label>
-                            <input type="number" 
-                                   step="0.01" 
-                                   name="monto" 
-                                   class="form-control" 
-                                   placeholder="0.00"
-                                   value="{{ recurrente.monto if recurrente else '' }}" 
-                                   required>
+                            <label for="monto" class="form-label fw-bold">Monto ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       id="monto"
+                                       step="0.01" 
+                                       name="monto" 
+                                       class="form-control" 
+                                       placeholder="0.00"
+                                       value="{{ recurrente.monto if recurrente else '' }}" 
+                                       required>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Día de Vencimiento (1 a 31)</label>
+                            <label for="dia_vencimiento" class="form-label fw-bold">Día de Vencimiento (1 a 31)</label>
                             <input type="number" 
+                                   id="dia_vencimiento"
                                    name="dia_vencimiento" 
                                    min="1" 
                                    max="31" 
@@ -47,35 +56,43 @@
                         </div>
                     </div>
 
+                    <!-- Categoría, Responsable y Medio de Pago -->
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Categoría</label>
-                            <select name="categoria" class="form-select" required>
-                                <option value="">Seleccionar...</option>
+                            <label for="categoria" class="form-label fw-bold">Categoría</label>
+                            <select id="categoria" name="categoria" class="form-select" required>
+                                <option value="" disabled {{ 'selected' if not recurrente else '' }}>Seleccionar...</option>
                                 {% for cat in categorias %}
-                                    <option value="{{ cat }}" {{ 'selected' if recurrente and recurrente.categoria == cat else '' }}>
+                                    <option value="{{ cat }}" {% if recurrente and recurrente.categoria == cat %}selected{% endif %}>
                                         {{ cat }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
+
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Responsable</label>
-                            <select name="responsable" class="form-select" required>
-                                <option value="">Seleccionar...</option>
+                            <label for="responsable" class="form-label fw-bold">Responsable</label>
+                            <select id="responsable" name="responsable" class="form-select" required>
+                                <option value="" disabled {% if not recurrente and current_user.nombre not in responsables %}selected{% endif %}>Seleccionar...</option>
                                 {% for resp in responsables %}
-                                    <option value="{{ resp }}" {{ 'selected' if recurrente and recurrente.responsable == resp else '' }}>
+                                    <option value="{{ resp }}" 
+                                        {% if recurrente and recurrente.responsable == resp %}
+                                            selected
+                                        {% elif not recurrente and current_user.nombre == resp %}
+                                            selected
+                                        {% endif %}>
                                         {{ resp }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
+
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Medio de Pago</label>
-                            <select name="medio_pago" class="form-select" required>
-                                <option value="">Seleccionar...</option>
+                            <label for="medio_pago" class="form-label fw-bold">Medio de Pago</label>
+                            <select id="medio_pago" name="medio_pago" class="form-select" required>
+                                <option value="" disabled {{ 'selected' if not recurrente else '' }}>Seleccionar...</option>
                                 {% for mp in medios_pago %}
-                                    <option value="{{ mp }}" {{ 'selected' if recurrente and recurrente.medio_pago == mp else '' }}>
+                                    <option value="{{ mp }}" {% if recurrente and recurrente.medio_pago == mp %}selected{% endif %}>
                                         {{ mp }}
                                     </option>
                                 {% endfor %}
@@ -83,12 +100,13 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{{ url_for('listar_recurrentes') }}" class="btn btn-secondary">
+                    <!-- Botones de Acción -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+                        <a href="{{ url_for('listar_recurrentes') }}" class="btn btn-outline-secondary px-4">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-success">
-                            Guardar Gasto Recurrente
+                        <button type="submit" class="btn btn-success px-4 fw-bold">
+                            💾 {{ 'Actualizar Gasto' if recurrente else 'Guardar Gasto Recurrente' }}
                         </button>
                     </div>
 

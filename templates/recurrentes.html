@@ -2,22 +2,27 @@
 
 {% block contenido %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>🔁 Gastos Recurrentes</h1>
+<!-- ENCABEZADO Y ACCIONES PRINCIPALES -->
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
     <div>
-        <form action="{{ url_for('generar_gastos_mes') }}" method="POST" class="d-inline">
-            <button type="submit" class="btn btn-outline-success me-2" onclick="return confirm('¿Generar los gastos recurrentes para el mes actual?')">
-                ⚡ Generar Gastos del Mes
+        <h1 class="h3 fw-bold m-0">🔁 Gastos Recurrentes</h1>
+        <small class="text-muted d-block d-sm-none">Plantillas de pagos periódicos</small>
+    </div>
+    <div class="d-flex gap-2">
+        <form action="{{ url_for('generar_gastos_mes') }}" method="POST" class="d-inline flex-grow-1 flex-sm-grow-0">
+            <button type="submit" class="btn btn-outline-success btn-sm w-100 fw-bold" onclick="return confirm('¿Generar los gastos recurrentes para el mes actual?')">
+                ⚡ Generar Mes
             </button>
         </form>
-        <a href="{{ url_for('nuevo_recurrente') }}" class="btn btn-primary">
-            ➕ Nuevo Recurrente
+        <a href="{{ url_for('nuevo_recurrente') }}" class="btn btn-primary btn-sm fw-bold flex-grow-1 flex-sm-grow-0">
+            ➕ Nuevo
         </a>
     </div>
 </div>
 
-<div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
+<!-- VISTA TABLA (PANTALLAS MEDIANAS Y GRANDES) -->
+<div class="table-responsive d-none d-md-block shadow-sm rounded">
+    <table class="table table-striped table-hover align-middle mb-0">
         <thead class="table-dark">
             <tr>
                 <th>Descripción</th>
@@ -35,11 +40,11 @@
             {% for recurrente in recurrentes %}
             <tr class="{{ 'table-secondary opacity-75' if not recurrente.activo }}">
                 <td><strong>{{ recurrente.descripcion }}</strong></td>
-                <td><span class="badge bg-secondary">{{ recurrente.categoria }}</span></td>
-                <td>{{ recurrente.monto | moneda }}</td>
+                <td><span class="badge bg-secondary opacity-75">{{ recurrente.categoria }}</span></td>
+                <td class="fw-bold">{{ recurrente.monto | moneda }}</td>
                 <td>{{ recurrente.responsable }}</td>
-                <td>{{ recurrente.medio_pago }}</td>
-                <td>Día {{ recurrente.dia_vencimiento }}</td>
+                <td><small class="text-muted">{{ recurrente.medio_pago }}</small></td>
+                <td><span class="badge bg-light text-dark border">Día {{ recurrente.dia_vencimiento }}</span></td>
                 <td>
                     {% if recurrente.activo %}
                         <span class="badge bg-success">Activo</span>
@@ -52,36 +57,96 @@
                     
                     {% if gasto_id %}
                         {% if pagados_mes_ids.get(recurrente.id) %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-success text-decoration-none">
-                                ✅ Pagado (Este mes)
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-success text-decoration-none" title="Haz clic para marcar como pendiente">
+                                ✅ Pagado
                             </a>
                         {% else %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-warning text-dark text-decoration-none">
-                                ⏳ Pendiente (Este mes)
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-warning text-dark text-decoration-none" title="Haz clic para marcar como pagado">
+                                ⏳ Pendiente
                             </a>
                         {% endif %}
                     {% else %}
-                        <span class="badge bg-secondary">Sin generar</span>
+                        <span class="badge bg-secondary opacity-50">Sin generar</span>
                     {% endif %}
                 </td>
                 <td class="text-end">
-                    <a href="{{ url_for('editar_recurrente', id=recurrente.id) }}" class="btn btn-sm btn-outline-primary me-1">
-                        ✏️ Editar
-                    </a>
-                    <a href="{{ url_for('toggle_recurrente', id=recurrente.id) }}" class="btn btn-sm {{ 'btn-outline-warning' if recurrente.activo else 'btn-outline-success' }}">
-                        {{ '⏸️ Pausar' if recurrente.activo else '▶️ Activar' }}
-                    </a>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('editar_recurrente', id=recurrente.id) }}" class="btn btn-outline-primary" title="Editar">
+                            ✏️
+                        </a>
+                        <a href="{{ url_for('toggle_recurrente', id=recurrente.id) }}" class="btn {{ 'btn-outline-warning' if recurrente.activo else 'btn-outline-success' }}" title="{{ 'Pausar' if recurrente.activo else 'Activar' }}">
+                            {{ '⏸️' if recurrente.activo else '▶️' }}
+                        </a>
+                    </div>
                 </td>
             </tr>
             {% else %}
             <tr>
                 <td colspan="9" class="text-center py-4 text-muted">
-                    No hay gastos recurrentes cargados. ¡Crea el primero!
+                    📜 No hay gastos recurrentes registrados. ¡Crea el primero!
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
+
+<!-- VISTA TARJETAS COMPACTAS (SOLO MÓVILES) -->
+<div class="d-md-none d-flex flex-column gap-2">
+    {% for recurrente in recurrentes %}
+    <div class="card shadow-sm border-0 {{ 'bg-light opacity-75' if not recurrente.activo }}">
+        <div class="card-body p-2">
+            
+            <div class="d-flex justify-content-between align-items-start mb-1">
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark">{{ recurrente.descripcion }}</h6>
+                    <span class="badge bg-secondary" style="font-size: 0.7rem;">{{ recurrente.categoria }}</span>
+                    <span class="badge bg-light text-dark border" style="font-size: 0.7rem;">Día {{ recurrente.dia_vencimiento }}</span>
+                </div>
+                <div class="text-end">
+                    <span class="fw-bold text-primary d-block">{{ recurrente.monto | moneda }}</span>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                <div class="d-flex gap-1 align-items-center">
+                    {% set gasto_id = generados_mes_ids.get(recurrente.id) %}
+                    {% if gasto_id %}
+                        {% if pagados_mes_ids.get(recurrente.id) %}
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-success text-decoration-none">
+                                ✅ Pagado
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto_id) }}" class="badge bg-warning text-dark text-decoration-none">
+                                ⏳ Pendiente
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-secondary opacity-50">Sin generar</span>
+                    {% endif %}
+
+                    {% if not recurrente.activo %}
+                        <span class="badge bg-danger">Inactivo</span>
+                    {% endif %}
+                </div>
+
+                <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('editar_recurrente', id=recurrente.id) }}" class="btn btn-outline-primary py-0 px-2">
+                        ✏️
+                    </a>
+                    <a href="{{ url_for('toggle_recurrente', id=recurrente.id) }}" class="btn {{ 'btn-outline-warning' if recurrente.activo else 'btn-outline-success' }} py-0 px-2">
+                        {{ '⏸️' if recurrente.activo else '▶️' }}
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-4 text-muted card body">
+        📜 No hay gastos recurrentes registrados.
+    </div>
+    {% endfor %}
 </div>
 
 {% endblock %}

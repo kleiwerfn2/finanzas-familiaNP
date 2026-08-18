@@ -5,16 +5,16 @@
 <h1 class="mb-4">📋 Listado de Gastos</h1>
 
 <!-- Panel de Filtros y Búsqueda Compacto -->
-<form method="get" class="card shadow-sm p-2 mb-3 w-100">
+<form method="get" class="card shadow-sm p-3 mb-4 w-100">
     <div class="row g-2">
         <!-- Fila 1 -->
         <div class="col-12 col-md-4">
-            <label for="buscar" class="form-label fw-bold small mb-0 fs-7">🔍 Buscar</label>
+            <label for="buscar" class="form-label fw-bold small mb-1">🔍 Buscar</label>
             <input type="text" id="buscar" name="q" class="form-control form-control-sm" placeholder="Descripción..." value="{{ q }}">
         </div>
 
         <div class="col-12 col-md-4">
-            <label for="categoria" class="form-label fw-bold small mb-0 fs-7">Categoría</label>
+            <label for="categoria" class="form-label fw-bold small mb-1">Categoría</label>
             <select id="categoria" name="categoria" class="form-select form-select-sm">
                 <option value="">Todas</option>
                 {% for cat in categorias %}
@@ -24,7 +24,7 @@
         </div>
 
         <div class="col-12 col-md-4">
-            <label for="responsable" class="form-label fw-bold small mb-0 fs-7">Responsable</label>
+            <label for="responsable" class="form-label fw-bold small mb-1">Responsable</label>
             <select id="responsable" name="responsable" class="form-select form-select-sm">
                 <option value="">Todos</option>
                 {% for resp in responsables %}
@@ -35,12 +35,12 @@
 
         <!-- Fila 2 -->
         <div class="col-12 col-md-4">
-            <label for="desde" class="form-label fw-bold small mb-0 fs-7">Desde</label>
+            <label for="desde" class="form-label fw-bold small mb-1">Desde</label>
             <input type="date" id="desde" name="fecha_desde" class="form-control form-control-sm" value="{{ fecha_desde }}">
         </div>
 
         <div class="col-12 col-md-4">
-            <label for="hasta" class="form-label fw-bold small mb-0 fs-7">Hasta</label>
+            <label for="hasta" class="form-label fw-bold small mb-1">Hasta</label>
             <input type="date" id="hasta" name="fecha_hasta" class="form-control form-control-sm" value="{{ fecha_hasta }}">
         </div>
 
@@ -58,9 +58,21 @@
 
         <thead class="table-dark text-nowrap">
             <tr>
-                <th><a href="/gastos?orden=fecha&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="text-white text-decoration-none">Fecha</a></th>
-                <th><a href="/gastos?orden=descripcion&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="text-white text-decoration-none">Descripción</a></th>
-                <th><a href="/gastos?orden=monto&dir={% if direccion == 'asc' %}desc{% else %}asc{% endif %}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="text-white text-decoration-none">Monto</a></th>
+                <th>
+                    <a href="{{ url_for('listar_gastos', orden='fecha', dir='asc' if direccion == 'desc' else 'desc', q=q, categoria=categoria_sel, responsable=responsable_sel, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta) }}" class="text-white text-decoration-none">
+                        Fecha {% if orden == 'fecha' %}{{ '⬇️' if direccion == 'desc' else '⬆️' }}{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('listar_gastos', orden='descripcion', dir='asc' if direccion == 'desc' else 'desc', q=q, categoria=categoria_sel, responsable=responsable_sel, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta) }}" class="text-white text-decoration-none">
+                        Descripción {% if orden == 'descripcion' %}{{ '⬇️' if direccion == 'desc' else '⬆️' }}{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('listar_gastos', orden='monto', dir='asc' if direccion == 'desc' else 'desc', q=q, categoria=categoria_sel, responsable=responsable_sel, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta) }}" class="text-white text-decoration-none">
+                        Monto {% if orden == 'monto' %}{{ '⬇️' if direccion == 'desc' else '⬆️' }}{% endif %}
+                    </a>
+                </th>
                 <th>Categoría</th>
                 <th>Responsable</th>
                 <th>Medio Pago</th>
@@ -79,7 +91,7 @@
                         <span class="badge bg-info text-dark ms-1" title="Gasto recurrente">🔁 Recurrente</span>
                     {% endif %}
                 </td>
-                <td class="text-nowrap">{{ gasto.monto | moneda }}</td>
+                <td class="text-nowrap fw-bold">{{ gasto.monto | moneda }}</td>
                 <td><span class="badge bg-secondary">{{ gasto.categoria }}</span></td>
                 <td>{{ gasto.responsable }}</td>
                 <td>{{ gasto.medio_pago }}</td>
@@ -87,9 +99,9 @@
                 <td class="text-center text-nowrap">
                     {% if gasto.gasto_recurrente_id %}
                         {% if gasto.pagado %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success text-nowrap" title="Marcar como no pagado">✅ Pagado</a>
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-success text-nowrap" title="Marcar como pendiente">✅ Pagado</a>
                         {% else %}
-                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-warning text-nowrap">⏳ Pendiente</a>
+                            <a href="{{ url_for('toggle_pago_gasto', id=gasto.id) }}" class="btn btn-sm btn-outline-warning text-nowrap" title="Marcar como pagado">⏳ Pendiente</a>
                         {% endif %}
                     {% else %}
                         <span class="text-muted">-</span>
@@ -99,7 +111,7 @@
                 <td class="text-end text-nowrap">
                     <div class="btn-group btn-group-sm" role="group" aria-label="Acciones">
                         <a href="{{ url_for('editar_gasto', id=gasto.id) }}" class="btn btn-outline-primary" title="Editar">✏️</a>
-                        <a href="{{ url_for('eliminar_gasto', id=gasto.id) }}" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar gasto?')" title="Eliminar">🗑️</a>
+                        <a href="{{ url_for('eliminar_gasto', id=gasto.id) }}" class="btn btn-outline-danger" onclick="return confirm('¿Estás seguro de eliminar este gasto?')" title="Eliminar">🗑️</a>
                     </div>
                 </td>
             </tr>
@@ -116,24 +128,26 @@
 </div>
 
 <!-- Paginación con parámetros de búsqueda preservados -->
+{% if gastos.pages > 1 %}
 <nav class="mt-4">
     <ul class="pagination justify-content-center">
         {% if gastos.has_prev %}
         <li class="page-item">
-            <a href="/gastos?pagina={{ gastos.prev_num }}&orden={{ orden }}&dir={{ direccion }}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="page-link">← Anterior</a>
+            <a href="{{ url_for('listar_gastos', pagina=gastos.prev_num, orden=orden, dir=direccion, q=q, categoria=categoria_sel, responsable=responsable_sel, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta) }}" class="page-link">← Anterior</a>
         </li>
         {% endif %}
 
         <li class="page-item disabled">
-            <a href="#" class="page-link">Página {{ gastos.page }} de {{ gastos.pages if gastos.pages > 0 else 1 }}</a>
+            <span class="page-link">Página {{ gastos.page }} de {{ gastos.pages }}</span>
         </li>
         
         {% if gastos.has_next %}
         <li class="page-item">
-            <a href="/gastos?pagina={{ gastos.next_num }}&orden={{ orden }}&dir={{ direccion }}&q={{ q }}&categoria={{ categoria_sel }}&responsable={{ responsable_sel }}&fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}" class="page-link">Siguiente →</a>
+            <a href="{{ url_for('listar_gastos', pagina=gastos.next_num, orden=orden, dir=direccion, q=q, categoria=categoria_sel, responsable=responsable_sel, fecha_desde=fecha_desde, fecha_hasta=fecha_hasta) }}" class="page-link">Siguiente →</a>
         </li>
         {% endif %}
     </ul>
 </nav>
+{% endif %}
 
 {% endblock %}

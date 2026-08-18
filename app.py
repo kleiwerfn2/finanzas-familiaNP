@@ -1,15 +1,18 @@
-import os, secrets  
+import os, secrets, string
 from datetime import datetime, date
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_mail import Mail, Message
+from itsdangerous import URLSafeTimedSerializer
 
 app = Flask(__name__)
 
-app.secret_key = "clave_secreta_super_segura_para_sesiones_y_cookies"  
-# Configuración de Base de Datos (Render / Supabase / Local)
+app.secret_key = os.environ.get("SECRET_KEY", "clave_secreta_super_segura_para_sesiones_y_cookies")
+
+# --- CONFIGURACIÓN DE BASE DE DATOS ---
 db_url = os.environ.get("DATABASE_URL", "sqlite:////app/data/finanzas.db")
 if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
@@ -18,6 +21,17 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+# --- CONFIGURACIÓN DE FLASK-MAIL ---
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', app.config['MAIL_USERNAME'])
+
+mail = Mail(app)
+serializer = URLSafeTimedSerializer(app.secret_key)
 
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
@@ -33,19 +47,23 @@ def inject_user():
 # --- MODELOS MULTIUSUARIO / MULTIFAMILIA ---
 
 class Familia(db.Model):
+    __tablename__ = 'familia'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     codigo_invitacion = db.Column(db.String(20), unique=True, nullable=False)
 
     usuarios = db.relationship('Usuario', backref='familia', lazy=True)
+    miembros = db.relationship('MiembroFamilia', backref='familia', lazy=True, cascade="all, delete-orphan")
     gastos = db.relationship('Gasto', backref='familia', lazy=True)
     recurrentes = db.relationship('GastoRecurrente', backref='familia', lazy=True)
 
 class Usuario(UserMixin, db.Model):
+    __tablename__ = 'usuario'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
+    confirmado = db.Column(db.Boolean, default=False)
     familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=False)
 
     def set_password(self, password):
@@ -54,7 +72,14 @@ class Usuario(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+class MiembroFamilia(db.Model):
+    __tablename__ = 'miembro_familia'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), nullable=False)
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=False)
+
 class Gasto(db.Model):
+    __tablename__ = 'gasto'
     id = db.Column(db.Integer, primary_key=True)
     fecha = db.Column(db.String(20), index=True)
     descripcion = db.Column(db.String(200))
@@ -64,10 +89,11 @@ class Gasto(db.Model):
     medio_pago = db.Column(db.String(50))
     gasto_recurrente_id = db.Column(db.Integer, db.ForeignKey('gasto_recurrente.id'), nullable=True, index=True)
     pagado = db.Column(db.Boolean, default=False)  
-    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True) # nullable=True temporal para migración
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True)
     recurrente = db.relationship('GastoRecurrente', backref='gastos_generados', lazy=True)
 
 class GastoRecurrente(db.Model):
+    __tablename__ = 'gasto_recurrente'
     id = db.Column(db.Integer, primary_key=True)
     descripcion = db.Column(db.String(200), nullable=False)
     categoria = db.Column(db.String(100), nullable=False)
@@ -76,16 +102,16 @@ class GastoRecurrente(db.Model):
     medio_pago = db.Column(db.String(100), nullable=False)
     dia_vencimiento = db.Column(db.Integer, nullable=False)
     activo = db.Column(db.Boolean, default=True)
-    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True) # nullable=True temporal para migración
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=True, index=True)
 
-# --- MIGRACIÓN DE DATOS INICIALES (PASO 2) ---
+# --- MIGRACIÓN Y DATOS INICIALES ---
 with app.app_context():
     db.create_all()
 
     from sqlalchemy import inspect, text
     inspector = inspect(db.engine)
     
-    # 1. Asegurar columnas familia_id
+    # 1. Asegurar columnas de migración
     columnas_gasto = [c['name'] for c in inspector.get_columns('gasto')]
     if 'familia_id' not in columnas_gasto:
         with db.engine.connect() as conn:
@@ -98,14 +124,19 @@ with app.app_context():
             conn.execute(text("ALTER TABLE gasto_recurrente ADD COLUMN familia_id INTEGER REFERENCES familia(id)"))
             conn.commit()
 
-    # 2. Crear Familia inicial si no existe ninguna
+    columnas_usuario = [c['name'] for c in inspector.get_columns('usuario')]
+    if 'confirmado' not in columnas_usuario:
+        with db.engine.connect() as conn:
+            conn.execute(text("ALTER TABLE usuario ADD COLUMN confirmado BOOLEAN DEFAULT FALSE"))
+            conn.commit()
+
+    # 2. Crear Familia inicial si no existe
     familia_base = Familia.query.first()
     if not familia_base:
-        codigo_unico = secrets.token_hex(4).upper()
+        codigo_unico = f"FAM-{secrets.token_hex(4).upper()}"
         familia_base = Familia(nombre="Familia Principal", codigo_invitacion=codigo_unico)
         db.session.add(familia_base)
         db.session.commit()
-        print(f"--> Familia creada con éxito! Código de invitación: {codigo_unico}")
 
     # 3. Crear Usuario inicial asociado a la familia
     usuario_base = Usuario.query.first()
@@ -113,14 +144,20 @@ with app.app_context():
         usuario_base = Usuario(
             nombre="Admin",
             email="admin@familia.com",
+            confirmado=True,
             familia_id=familia_base.id
         )
-        usuario_base.set_password("admin123")  # Contraseña inicial temporal
+        usuario_base.set_password("admin123")
         db.session.add(usuario_base)
         db.session.commit()
-        print("--> Usuario creado con éxito! Email: admin@familia.com | Pass: admin123")
 
-    # 4. Asignar todos los gastos huérfanos a la Familia Principal
+    # 4. Asegurar miembros iniciales
+    if not MiembroFamilia.query.filter_by(familia_id=familia_base.id).first():
+        db.session.add(MiembroFamilia(nombre="Joffan", familia_id=familia_base.id))
+        db.session.add(MiembroFamilia(nombre="Dore", familia_id=familia_base.id))
+        db.session.commit()
+
+    # 5. Asignar gastos huérfanos a la familia base
     Gasto.query.filter(Gasto.familia_id.is_(None)).update({Gasto.familia_id: familia_base.id}, synchronize_session=False)
     GastoRecurrente.query.filter(GastoRecurrente.familia_id.is_(None)).update({GastoRecurrente.familia_id: familia_base.id}, synchronize_session=False)
     db.session.commit()
@@ -135,17 +172,22 @@ def moneda(valor):
 
 @app.context_processor
 def inject_alertas():
+    if not current_user.is_authenticated:
+        return dict(alertas_vencimiento=[], total_alertas=0)
     try:
         hoy = date.today()
         mes_actual = hoy.strftime("%Y-%m")
         dia_actual = hoy.day
 
-        recurrentes_activos = GastoRecurrente.query.filter_by(activo=True).all()
+        recurrentes_activos = GastoRecurrente.query.filter_by(
+            activo=True,
+            familia_id=current_user.familia_id
+        ).all()
         
-        # Optimización: Solo seleccionamos los campos necesarios de DB
         gastos_mes = db.session.query(
             Gasto.gasto_recurrente_id, Gasto.pagado, Gasto.id
         ).filter(
+            Gasto.familia_id == current_user.familia_id,
             Gasto.fecha.startswith(mes_actual),
             Gasto.gasto_recurrente_id.isnot(None)
         ).all()
@@ -174,36 +216,47 @@ def inject_alertas():
     except Exception:
         return dict(alertas_vencimiento=[], total_alertas=0)
 
-
 # --- HELPER DE OPCIONES DE FORMULARIO ---
 def obtener_opciones():
     cat_base = ["Supermercado", "Restaurante", "Alquiler", "Expensas", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales", "Cora", "Auto", "Varios", "combustible"]
-    resp_base = ["Joffan", "Dore"]
     medios_base = ["BBVA Master", "BBVA Visa", "Santander Visa", "Santander American", "Transferencia Galicia", "Transferencia Santander", "Transferencia BBVA", "Mercado Pago", "Efectivo"]
 
-    cat_db = [c[0] for c in db.session.query(Gasto.categoria).distinct().all() if c[0]]
-    resp_db = [r[0] for r in db.session.query(Gasto.responsable).distinct().all() if r[0]]
-    medios_db = [m[0] for m in db.session.query(Gasto.medio_pago).distinct().all() if m[0]]
+    if current_user.is_authenticated:
+        miembros_db = [m.nombre for m in MiembroFamilia.query.filter_by(familia_id=current_user.familia_id).order_by(MiembroFamilia.nombre).all()]
+        cat_db = [c[0] for c in db.session.query(Gasto.categoria).filter_by(familia_id=current_user.familia_id).distinct().all() if c[0]]
+        medios_db = [m[0] for m in db.session.query(Gasto.medio_pago).filter_by(familia_id=current_user.familia_id).distinct().all() if m[0]]
+    else:
+        miembros_db = ["Joffan", "Dore"]
+        cat_db = []
+        medios_db = []
 
     return {
         "categorias": sorted(list(set(cat_base + cat_db))),
-        "responsables": sorted(list(set(resp_base + resp_db))),
+        "responsables": miembros_db if miembros_db else ["Sin miembros"],
         "medios_pago": sorted(list(set(medios_base + medios_db)))
     }
 
-# --- RUTAS DE AUTENTICACIÓN (PASO 3) ---
+def generar_codigo_invitacion(longitud=8):
+    caracteres = string.ascii_uppercase + string.digits
+    return f"FAM-{''.join(secrets.choice(caracteres) for _ in range(longitud))}"
+
+# --- RUTAS DE AUTENTICACIÓN ---
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("home"))
-        
+    
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
         usuario = Usuario.query.filter_by(email=email).first()
 
         if usuario and usuario.check_password(password):
+            if not usuario.confirmado:
+                flash('Debes confirmar tu correo electrónico antes de ingresar.', 'warning')
+                return redirect(url_for('login'))
+                
             login_user(usuario)
             flash("Sesión iniciada correctamente.", "success")
             return redirect(url_for("home"))
@@ -212,49 +265,89 @@ def login():
 
     return render_template("login.html")
 
-@app.route("/registro", methods=["GET", "POST"])
+@app.route('/registro', methods=['GET', 'POST'])
 def registro():
     if current_user.is_authenticated:
-        return redirect(url_for("home"))
+        return redirect(url_for('home'))
 
-    if request.method == "POST":
-        nombre = request.form.get("nombre")
-        email = request.form.get("email")
-        password = request.form.get("password")
-        tipo_registro = request.form.get("tipo_registro")
+    if request.method == 'POST':
+        familia_nombre = request.form.get('familia_nombre')
+        nombre = request.form.get('nombre')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        miembros_input = request.form.get('miembros')
 
         if Usuario.query.filter_by(email=email).first():
-            flash("El correo electrónico ya está registrado.", "warning")
-            return render_template("registro.html")
+            flash('El correo electrónico ya está registrado.', 'danger')
+            return redirect(url_for('registro'))
 
-        if tipo_registro == "crear":
-            nombre_familia = request.form.get("nombre_familia", "Mi Familia")
-            codigo = secrets.token_hex(4).upper()
-            nueva_familia = Familia(nombre=nombre_familia, codigo_invitacion=codigo)
-            db.session.add(nueva_familia)
-            db.session.commit()
-            familia_target = nueva_familia
-        else:
-            codigo = request.form.get("codigo_invitacion", "").strip().upper()
-            familia_target = Familia.query.filter_by(codigo_invitacion=codigo).first()
-            if not familia_target:
-                flash("El código de invitación ingresado es inválido.", "danger")
-                return render_template("registro.html")
+        # 1. Crear Familia con su código
+        codigo_nuevo = generar_codigo_invitacion()
+        while Familia.query.filter_by(codigo_invitacion=codigo_nuevo).first():
+            codigo_nuevo = generar_codigo_invitacion()
 
+        nueva_familia = Familia(nombre=familia_nombre, codigo_invitacion=codigo_nuevo)
+        db.session.add(nueva_familia)
+        db.session.flush()
+
+        # 2. Crear Usuario
         nuevo_usuario = Usuario(
             nombre=nombre,
             email=email,
-            familia_id=familia_target.id
+            confirmado=False,
+            familia_id=nueva_familia.id
         )
         nuevo_usuario.set_password(password)
         db.session.add(nuevo_usuario)
+
+        # 3. Registrar el Creador como primer Miembro Responsable
+        db.session.add(MiembroFamilia(nombre=nombre, familia_id=nueva_familia.id))
+
+        # 4. Registrar Integrantes Adicionales
+        if miembros_input:
+            lista = [m.strip() for m in miembros_input.split(',') if m.strip()]
+            for nombre_m in lista:
+                if nombre_m.lower() != nombre.lower():
+                    db.session.add(MiembroFamilia(nombre=nombre_m, familia_id=nueva_familia.id))
+
         db.session.commit()
 
-        login_user(nuevo_usuario)
-        flash("¡Cuenta y familia registradas con éxito!", "success")
-        return redirect(url_for("home"))
+        # 5. Enviar Correo de Confirmación
+        try:
+            token = serializer.dumps(email, salt='email-confirm-salt')
+            confirm_url = url_for('confirmar_email', token=token, _external=True)
 
-    return render_template("registro.html")
+            msg = Message('Confirma tu cuenta - Finanzas Familiares', recipients=[email])
+            msg.body = f'¡Hola {nombre}!\n\nConfirma tu registro ingresando al siguiente enlace:\n{confirm_url}\n\nTu código de invitación familiar es: {codigo_nuevo}'
+            mail.send(msg)
+            flash('Registro creado. Te hemos enviado un correo de confirmación a tu e-mail.', 'info')
+        except Exception as e:
+            # Fallback en caso de no tener configurado SMTP
+            nuevo_usuario.confirmado = True
+            db.session.commit()
+            flash('Registro exitoso. Tu cuenta ha sido activada automáticamente.', 'success')
+
+        return redirect(url_for('login'))
+
+    return render_template('registro.html')
+
+@app.route('/confirmar/<token>')
+def confirmar_email(token):
+    try:
+        email = serializer.loads(token, salt='email-confirm-salt', max_age=3600)
+    except Exception:
+        flash('El enlace de confirmación es inválido o ha expirado.', 'danger')
+        return redirect(url_for('login'))
+
+    usuario = Usuario.query.filter_by(email=email).first_or_404()
+    if usuario.confirmado:
+        flash('Tu cuenta ya está confirmada. Inicia sesión.', 'info')
+    else:
+        usuario.confirmado = True
+        db.session.commit()
+        flash('¡Cuenta activada con éxito! Ya puedes iniciar sesión.', 'success')
+
+    return redirect(url_for('login'))
 
 @app.route("/logout")
 @login_required
@@ -265,15 +358,16 @@ def logout():
 
 
 # --- RUTAS PRINCIPALES ---
+
 @app.route("/")
+@login_required
 def home():
     mes_seleccionado = request.args.get("mes", "todos")
 
-    gastos_query = Gasto.query if mes_seleccionado == "todos" else Gasto.query.filter(Gasto.fecha.startswith(mes_seleccionado))
+    query_base = Gasto.query.filter_by(familia_id=current_user.familia_id)
+    gastos_query = query_base if mes_seleccionado == "todos" else query_base.filter(Gasto.fecha.startswith(mes_seleccionado))
 
-    # Optimizado: Suma directa sin subconsultas innecesarias
     total_gastado = gastos_query.with_entities(func.coalesce(func.sum(Gasto.monto), 0.0)).scalar() or 0.0
-
     cantidad_gastos = gastos_query.count()
     ultimos_gastos = gastos_query.order_by(Gasto.id.desc()).limit(5).all()
 
@@ -301,7 +395,6 @@ def home():
         Gasto.medio_pago, func.sum(Gasto.monto)
     ).group_by(Gasto.medio_pago).order_by(func.sum(Gasto.monto).desc()).all() 
 
-    # --- CATEGORÍA MÁS FRECUENTE (GASTO HORMIGA) ---
     cat_frecuente_db = gastos_query.with_entities(
         Gasto.categoria,
         func.count(Gasto.id).label("frecuencia"),
@@ -319,7 +412,7 @@ def home():
             "porcentaje": round((monto_cat / total_gastado) * 100, 1)
         }
 
-    meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).distinct().all()
+    meses_db = db.session.query(func.substr(Gasto.fecha, 1, 7)).filter_by(familia_id=current_user.familia_id).distinct().all()
     meses_disponibles = sorted([m[0] for m in meses_db if m[0]], reverse=True)
 
     nombres_meses = {
@@ -331,7 +424,7 @@ def home():
     gastos_mes_db = db.session.query(
         func.substr(Gasto.fecha, 1, 7).label("mes"),
         func.sum(Gasto.monto).label("total")
-    ).group_by("mes").order_by(db.desc("mes")).limit(6).all()
+    ).filter_by(familia_id=current_user.familia_id).group_by("mes").order_by(db.desc("mes")).limit(6).all()
 
     mes_labels = [nombres_meses.get(m[0][5:7], m[0]) for m in reversed(gastos_mes_db) if m[0]]
     mes_totals = [float(m[1]) for m in reversed(gastos_mes_db) if m[0]]
@@ -355,6 +448,7 @@ def home():
     )
 
 @app.route("/nuevo", methods=["GET", "POST"])
+@login_required
 def nuevo_gasto():
     if request.method == "POST":
         gasto = Gasto(
@@ -363,7 +457,8 @@ def nuevo_gasto():
             monto=float(request.form["monto"] or 0),
             categoria=request.form["categoria"],
             responsable=request.form["responsable"],
-            medio_pago=request.form["medio_pago"]
+            medio_pago=request.form["medio_pago"],
+            familia_id=current_user.familia_id
         )
         db.session.add(gasto)
         db.session.commit()
@@ -372,6 +467,7 @@ def nuevo_gasto():
     return render_template("nuevo_gasto.html", gasto=None, **obtener_opciones())
 
 @app.route('/gastos')
+@login_required
 def listar_gastos():
     pagina = request.args.get('pagina', 1, type=int)
     orden = request.args.get('orden', 'fecha')
@@ -383,7 +479,7 @@ def listar_gastos():
     fecha_desde = request.args.get('fecha_desde', '')
     fecha_hasta = request.args.get('fecha_hasta', '')
 
-    query = Gasto.query
+    query = Gasto.query.filter_by(familia_id=current_user.familia_id)
 
     if q:
         query = query.filter(Gasto.descripcion.ilike(f'%{q}%'))
@@ -417,8 +513,9 @@ def listar_gastos():
     )
 
 @app.route("/gastos/<int:id>/editar", methods=["GET", "POST"])
+@login_required
 def editar_gasto(id):
-    gasto = Gasto.query.get_or_404(id)
+    gasto = Gasto.query.filter_by(id=id, familia_id=current_user.familia_id).first_or_404()
     if request.method == "POST":
         gasto.fecha = request.form["fecha"]
         gasto.descripcion = request.form["descripcion"]
@@ -432,18 +529,20 @@ def editar_gasto(id):
     return render_template("nuevo_gasto.html", gasto=gasto, **obtener_opciones())
 
 @app.route("/gastos/<int:id>/eliminar")
+@login_required
 def eliminar_gasto(id):
-    gasto = Gasto.query.get_or_404(id)
+    gasto = Gasto.query.filter_by(id=id, familia_id=current_user.familia_id).first_or_404()
     db.session.delete(gasto)
     db.session.commit()
     return redirect(url_for("listar_gastos"))
 
 @app.route("/reportes")
+@login_required
 def reportes():
     gastos_db = db.session.query(
         func.substr(Gasto.fecha, 1, 7).label("mes"),
         func.sum(Gasto.monto)
-    ).group_by("mes").order_by(db.desc("mes")).all()
+    ).filter_by(familia_id=current_user.familia_id).group_by("mes").order_by(db.desc("mes")).all()
 
     gastos_por_mes = [(m, float(t)) for m, t in gastos_db if m]
 
@@ -459,9 +558,8 @@ def reportes():
     if len(gastos_por_mes) >= 2:
         mes_act, mes_ant = gastos_por_mes[0][0], gastos_por_mes[1][0]
 
-        # Categorías
-        cat_actual = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.fecha.startswith(mes_act)).group_by(Gasto.categoria).all())
-        cat_anterior = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.fecha.startswith(mes_ant)).group_by(Gasto.categoria).all())
+        cat_actual = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.familia_id == current_user.familia_id, Gasto.fecha.startswith(mes_act)).group_by(Gasto.categoria).all())
+        cat_anterior = dict(db.session.query(Gasto.categoria, func.sum(Gasto.monto)).filter(Gasto.familia_id == current_user.familia_id, Gasto.fecha.startswith(mes_ant)).group_by(Gasto.categoria).all())
 
         mayor_dif = 0
         for cat, tot_act in cat_actual.items():
@@ -482,16 +580,15 @@ def reportes():
 
         comparativo_categorias.sort(key=lambda x: abs(x["variacion"]), reverse=True)
 
-        # Optimización: Carga masiva en 2 consultas SQL agrupadas
         rec_act = dict(db.session.query(Gasto.gasto_recurrente_id, func.sum(Gasto.monto)).filter(
-            Gasto.fecha.startswith(mes_act), Gasto.gasto_recurrente_id.isnot(None)
+            Gasto.familia_id == current_user.familia_id, Gasto.fecha.startswith(mes_act), Gasto.gasto_recurrente_id.isnot(None)
         ).group_by(Gasto.gasto_recurrente_id).all())
 
         rec_ant = dict(db.session.query(Gasto.gasto_recurrente_id, func.sum(Gasto.monto)).filter(
-            Gasto.fecha.startswith(mes_ant), Gasto.gasto_recurrente_id.isnot(None)
+            Gasto.familia_id == current_user.familia_id, Gasto.fecha.startswith(mes_ant), Gasto.gasto_recurrente_id.isnot(None)
         ).group_by(Gasto.gasto_recurrente_id).all())
 
-        for rec in GastoRecurrente.query.all():
+        for rec in GastoRecurrente.query.filter_by(familia_id=current_user.familia_id).all():
             tot_act = rec_act.get(rec.id, 0.0)
             tot_ant = rec_ant.get(rec.id, 0.0)
             dif_rec = tot_act - tot_ant
@@ -519,15 +616,18 @@ def reportes():
         comparativo_recurrentes=comparativo_recurrentes
     )
 
-
 # --- RUTAS DE RECURRENTES Y RÁPIDAS ---
+
 @app.route("/recurrentes")
+@login_required
 def listar_recurrentes():
     mes_actual = datetime.now().strftime("%Y-%m")
-    recurrentes = GastoRecurrente.query.order_by(GastoRecurrente.descripcion).all()
+    recurrentes = GastoRecurrente.query.filter_by(familia_id=current_user.familia_id).order_by(GastoRecurrente.descripcion).all()
     
     gastos_mes = db.session.query(Gasto.gasto_recurrente_id, Gasto.pagado, Gasto.id).filter(
-        Gasto.fecha.startswith(mes_actual), Gasto.gasto_recurrente_id.isnot(None)
+        Gasto.familia_id == current_user.familia_id,
+        Gasto.fecha.startswith(mes_actual),
+        Gasto.gasto_recurrente_id.isnot(None)
     ).all()
 
     pagados_mes_ids = {g[0]: g[1] for g in gastos_mes}
@@ -536,6 +636,7 @@ def listar_recurrentes():
     return render_template("recurrentes.html", recurrentes=recurrentes, pagados_mes_ids=pagados_mes_ids, generados_mes_ids=generados_mes_ids)
 
 @app.route("/recurrentes/nuevo", methods=["GET", "POST"])
+@login_required
 def nuevo_recurrente():
     if request.method == "POST":
         nuevo = GastoRecurrente(
@@ -544,7 +645,8 @@ def nuevo_recurrente():
             monto=float(request.form["monto"] or 0),
             responsable=request.form["responsable"],
             medio_pago=request.form["medio_pago"],
-            dia_vencimiento=int(request.form["dia_vencimiento"])
+            dia_vencimiento=int(request.form["dia_vencimiento"]),
+            familia_id=current_user.familia_id
         )
         db.session.add(nuevo)
         db.session.commit()
@@ -553,8 +655,9 @@ def nuevo_recurrente():
     return render_template("recurrente_form.html", recurrente=None, **obtener_opciones())
 
 @app.route("/recurrentes/<int:id>/editar", methods=["GET", "POST"])
+@login_required
 def editar_recurrente(id):
-    recurrente = GastoRecurrente.query.get_or_404(id)
+    recurrente = GastoRecurrente.query.filter_by(id=id, familia_id=current_user.familia_id).first_or_404()
     if request.method == "POST":
         recurrente.descripcion = request.form["descripcion"]
         recurrente.categoria = request.form["categoria"]
@@ -568,22 +671,25 @@ def editar_recurrente(id):
     return render_template("recurrente_form.html", recurrente=recurrente, **obtener_opciones())
 
 @app.route("/recurrentes/<int:id>/toggle")
+@login_required
 def toggle_recurrente(id):
-    recurrente = GastoRecurrente.query.get_or_404(id)
+    recurrente = GastoRecurrente.query.filter_by(id=id, familia_id=current_user.familia_id).first_or_404()
     recurrente.activo = not recurrente.activo
     db.session.commit()
     return redirect(url_for("listar_recurrentes"))
 
 @app.route("/recurrentes/generar", methods=["POST"])
+@login_required
 def generar_gastos_mes():
     mes_actual = datetime.now().strftime("%Y-%m")
-    recurrentes_activos = GastoRecurrente.query.filter_by(activo=True).all()
+    recurrentes_activos = GastoRecurrente.query.filter_by(activo=True, familia_id=current_user.familia_id).all()
 
     for rec in recurrentes_activos:
         dia_str = str(rec.dia_vencimiento).zfill(2)
         fecha_gasto = f"{mes_actual}-{dia_str}"
 
         existente = Gasto.query.filter(
+            Gasto.familia_id == current_user.familia_id,
             Gasto.gasto_recurrente_id == rec.id,
             Gasto.fecha.startswith(mes_actual)
         ).first()
@@ -596,7 +702,8 @@ def generar_gastos_mes():
                 categoria=rec.categoria,
                 responsable=rec.responsable,
                 medio_pago=rec.medio_pago,
-                gasto_recurrente_id=rec.id
+                gasto_recurrente_id=rec.id,
+                familia_id=current_user.familia_id
             )
             db.session.add(nuevo_gasto)
 
@@ -604,13 +711,15 @@ def generar_gastos_mes():
     return redirect(url_for("listar_recurrentes"))
 
 @app.route("/gastos/<int:id>/toggle-pago")
+@login_required
 def toggle_pago_gasto(id):
-    gasto = Gasto.query.get_or_404(id)
+    gasto = Gasto.query.filter_by(id=id, familia_id=current_user.familia_id).first_or_404()
     gasto.pagado = not gasto.pagado
     db.session.commit()
     return redirect(request.referrer or url_for("listar_gastos"))
 
 @app.route('/rapido', methods=['GET', 'POST'])
+@login_required
 def carga_rapida():
     if request.method == 'POST':
         nuevo_gasto = Gasto(
@@ -619,13 +728,13 @@ def carga_rapida():
             monto=float(request.form.get('monto', 0)),
             categoria=request.form.get('categoria'),
             responsable=request.form.get('responsable'),
-            medio_pago=request.form.get('medio_pago')
+            medio_pago=request.form.get('medio_pago'),
+            familia_id=current_user.familia_id
         )
         db.session.add(nuevo_gasto)
         db.session.commit()
         return redirect(url_for('listar_gastos'))
 
-    # Reutilizamos obtener_opciones()
     opciones = obtener_opciones()
     return render_template(
         'carga_rapida.html',
@@ -635,9 +744,5 @@ def carga_rapida():
         medios_pago=opciones["medios_pago"]
     )
 
-with app.app_context():
-    db.create_all()
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-    

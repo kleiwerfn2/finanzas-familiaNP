@@ -180,7 +180,7 @@
                     </ul>
                 </div>
 
-                <!-- SECCIÓN DE USUARIO / CERRAR SESIÓN EN LA BARRA SUPERIOR (Visibilidad en pantallas medianas y grandes) -->
+                <!-- SECCIÓN DE USUARIO / CERRAR SESIÓN -->
                 {% if current_user.is_authenticated %}
                     <div class="d-none d-md-flex align-items-center text-white ms-2">
                         <small class="me-2">👤 <strong>{{ current_user.nombre }}</strong></small>
@@ -240,10 +240,12 @@
                         <small class="text-light d-block opacity-75">Usuario activo:</small>
                         <span class="fw-bold fs-6">👤 {{ current_user.nombre }}</span>
                     </div>
+                    {% if current_user.familia %}
                     <div class="mb-3">
                         <small class="text-light d-block opacity-75">Familia:</small>
                         <span class="badge bg-primary">🏠 {{ current_user.familia.nombre }}</span>
                     </div>
+                    {% endif %}
                     <a href="{{ url_for('logout') }}" class="btn btn-danger w-100 btn-sm fw-bold">
                         🚪 Cerrar Sesión
                     </a>
@@ -254,6 +256,20 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <main id="contenidoPrincipal" class="content container-fluid">
+        <!-- MENSAJES FLASH FLASK -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mt-2">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         {% block contenido %}
         {% endblock %}
     </main>
@@ -261,11 +277,15 @@
     <!-- Botón Flotante de Carga Rápida (Solo visible en móviles/tablets) -->
     <a href="{{ url_for('carga_rapida') }}" 
        class="btn btn-success rounded-circle position-fixed bottom-0 end-0 m-3 shadow-lg d-md-none d-flex align-items-center justify-content-center" 
-       style="width: 48px; height: 48px; font-size: 22px; z-index: 1050; text-decoration: none;">
+       style="width: 48px; height: 48px; font-size: 22px; z-index: 1050; text-decoration: none;"
+       title="Carga Rápida">
         ⚡
     </a>
 
     <!-- JS de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block scripts %}
+    {% endblock %}
 </body>
 </html>
