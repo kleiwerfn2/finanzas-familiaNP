@@ -1,48 +1,76 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Control de Gastos</title>
-    <link href="https://cdn.jsdelivr.net/style/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light d-flex align-items-center vh-100">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title text-center mb-4 font-weight-bold">Iniciar Sesión</h4>
-                        
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                          {% if messages %}
-                            {% for category, message in messages %}
-                              <div class="alert alert-{{ category }} text-center py-2" role="alert">
-                                {{ message }}
-                              </div>
-                            {% endfor %}
-                          {% endif %}
-                        {% endwith %}
+{% extends "base.html" %}
 
-                        <form method="POST" action="{{ url_for('login') }}">
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Correo Electrónico</label>
-                                <input type="email" class="form-control" id="email" name="email" required placeholder="tu@email.com">
+{% block contenido %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        
+        <!-- Tarjeta de Login -->
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            
+            <!-- Encabezado con degradado azul -->
+            <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, #1e3a5f 0%, #2a5298 100%);">
+                <div class="display-5 mb-1">💰</div>
+                <h4 class="fw-bold mb-0">Finanzas Familiares</h4>
+                <small class="opacity-75">Ingresa tus credenciales para continuar</small>
+            </div>
+
+            <!-- Cuerpo del Formulario -->
+            <div class="card-body p-4 bg-white">
+
+                <!-- Mensajes Flash (Errores/Éxitos) -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show py-2 px-3 mb-3 fs-6" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close py-2 px-3" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100 fw-bold">Ingresar</button>
-                        </form>
-                        <hr class="my-4">
-                        <div class="text-center">
-                            <small class="text-muted">¿No tienes cuenta? <a href="{{ url_for('registro') }}">Registrar mi familia</a></small>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('login') }}" autocomplete="off">
+                    
+                    <!-- Campo Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label text-secondary fw-semibold">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">✉️</span>
+                            <input type="email" class="form-control bg-light border-start-0" id="email" name="email" placeholder="usuario@familia.com" required autofocus>
                         </div>
                     </div>
-                </div>
+
+                    <!-- Campo Contraseña -->
+                    <div class="mb-4">
+                        <label for="password" class="form-label text-secondary fw-semibold">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">🔒</span>
+                            <input type="password" class="form-control bg-light border-start-0" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Ingreso -->
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary fw-bold py-2 shadow-sm" style="background-color: #1e3a5f; border: none;">
+                            Ingresar
+                        </button>
+                    </div>
+
+                </form>
             </div>
+
+            <!-- Pie de tarjeta para Registro -->
+            <div class="card-footer bg-light border-0 text-center py-3">
+                <small class="text-muted">
+                    ¿Aún no tienes una cuenta familiar? 
+                    <a href="{{ url_for('registro') }}" class="fw-bold text-decoration-none" style="color: #1e3a5f;">
+                        Regístrate aquí
+                    </a>
+                </small>
+            </div>
+
         </div>
+
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
