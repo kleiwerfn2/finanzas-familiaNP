@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
+app.secret_key = "clave_secreta_super_segura_para_sesiones_y_cookies"  
 # Configuración de Base de Datos (Render / Supabase / Local)
 db_url = os.environ.get("DATABASE_URL", "sqlite:////app/data/finanzas.db")
 if db_url and db_url.startswith("postgres://"):
