@@ -1,87 +1,94 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro - Control de Gastos</title>
-    <link href="https://cdn.jsdelivr.net/style/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light d-flex align-items-center min-vh-100 py-5">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body p-4">
-                        <h4 class="card-title text-center mb-4">Registro de Usuario</h4>
-                        
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                          {% if messages %}
-                            {% for category, message in messages %}
-                              <div class="alert alert-{{ category }} text-center py-2" role="alert">
+{% extends "base.html" %}
+
+{% block contenido %}
+<div class="container d-flex justify-content-center align-items-center py-4" style="min-height: 80vh;">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+        
+        <!-- Tarjeta de Registro -->
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            
+            <!-- Encabezado con degradado azul -->
+            <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, #1e3a5f 0%, #2a5298 100%);">
+                <div class="display-5 mb-1">🏠</div>
+                <h4 class="fw-bold mb-0">Crear Cuenta Familiar</h4>
+                <small class="opacity-75">Registra tu familia para empezar a gestionar tus gastos</small>
+            </div>
+
+            <!-- Cuerpo del Formulario -->
+            <div class="card-body p-4 bg-white">
+
+                <!-- Mensajes Flash (Errores/Éxitos) -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show py-2 px-3 mb-3 fs-6" role="alert">
                                 {{ message }}
-                              </div>
-                            {% endfor %}
-                          {% endif %}
-                        {% endwith %}
+                                <button type="button" class="btn-close py-2 px-3" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
-                        <form method="POST" action="{{ url_for('registro') }}">
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label">Tu Nombre</label>
-                                <input type="text" class="form-control" id="nombre" name="nombre" required placeholder="Ej. Juan Pérez">
-                            </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Correo Electrónico</label>
-                                <input type="email" class="form-control" id="email" name="email" required placeholder="tu@email.com">
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Contraseña</label>
-                                <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
-                            </div>
-
-                            <hr class="my-4">
-                            <h6 class="fw-bold mb-3">Vínculo Familiar</h6>
-                            
-                            <div class="mb-3">
-                                <label for="tipo_registro" class="form-label">¿Qué deseas hacer?</label>
-                                <select class="form-select" id="tipo_registro" name="tipo_registro" onchange="toggleFamiliaOp(this.value)">
-                                    <option value="crear">Crear una nueva familia</option>
-                                    <option value="unirse">Unirme a una familia existente con un código</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3" id="group_nombre_familia">
-                                <label for="nombre_familia" class="form-label">Nombre de tu Familia</label>
-                                <input type="text" class="form-control" id="nombre_familia" name="nombre_familia" placeholder="Ej. Familia Rodríguez">
-                            </div>
-
-                            <div class="mb-3 d-none" id="group_codigo_invitacion">
-                                <label for="codigo_invitacion" class="form-label">Código de Invitación</label>
-                                <input type="text" class="form-control text-uppercase" id="codigo_invitacion" name="codigo_invitacion" placeholder="Ej. A1B2C3D4">
-                            </div>
-
-                            <button type="submit" class="btn btn-success w-100 fw-bold mt-3">Completar Registro</button>
-                        </form>
-                        <div class="text-center mt-3">
-                            <small class="text-muted">¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Iniciar Sesión</a></small>
+                <form method="POST" action="{{ url_for('registro') }}" autocomplete="off">
+                    
+                    <!-- Nombre de la Familia -->
+                    <div class="mb-3">
+                        <label for="familia_nombre" class="form-label text-secondary fw-semibold">Nombre de la Familia</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">👨‍👩‍👧‍👦</span>
+                            <input type="text" class="form-control bg-light border-start-0" id="familia_nombre" name="familia_nombre" placeholder="Ej: Familia Pérez" required autofocus>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        function toggleFamiliaOp(valor) {
-            const grpNombre = document.getElementById('group_nombre_familia');
-            const grpCodigo = document.getElementById('group_codigo_invitacion');
-            if (valor === 'crear') {
-                grpNombre.classList.remove('d-none');
-                grpCodigo.classList.add('d-none');
-            } else {
-                grpNombre.classList.add('d-none');
-                grpCodigo.classList.remove('d-none');
-            }
-        }
-    </script>
-</body>
-</html>
+                    <!-- Nombre del Usuario -->
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label text-secondary fw-semibold">Tu Nombre</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">👤</span>
+                            <input type="text" class="form-control bg-light border-start-0" id="nombre" name="nombre" placeholder="Ej: Juan" required>
+                        </div>
+                    </div>
+
+                    <!-- Correo Electrónico -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label text-secondary fw-semibold">Correo Electrónico</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">✉️</span>
+                            <input type="email" class="form-control bg-light border-start-0" id="email" name="email" placeholder="juan@familia.com" required>
+                        </div>
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="mb-4">
+                        <label for="password" class="form-label text-secondary fw-semibold">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted">🔒</span>
+                            <input type="password" class="form-control bg-light border-start-0" id="password" name="password" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        </div>
+                    </div>
+
+                    <!-- Botón de Registro -->
+                    <div class="d-grid mb-2">
+                        <button type="submit" class="btn btn-primary fw-bold py-2 shadow-sm" style="background-color: #1e3a5f; border: none;">
+                            Registrar Cuenta
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Pie de tarjeta para Login -->
+            <div class="card-footer bg-light border-0 text-center py-3">
+                <small class="text-muted">
+                    ¿Ya tienes una cuenta registrada? 
+                    <a href="{{ url_for('login') }}" class="fw-bold text-decoration-none" style="color: #1e3a5f;">
+                        Inicia sesión aquí
+                    </a>
+                </small>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
