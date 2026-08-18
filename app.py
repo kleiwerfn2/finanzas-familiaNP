@@ -258,6 +258,7 @@ def logout():
     flash("Has cerrado sesión.", "info")
     return redirect(url_for("login"))
 
+
 # --- RUTAS PRINCIPALES ---
 @app.route("/")
 def home():
