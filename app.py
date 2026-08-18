@@ -26,6 +26,10 @@ login_manager.login_view = "login"
 def load_user(user_id):
     return Usuario.query.get(int(user_id))
 
+@app.context_processor
+def inject_user():
+    return dict(current_user=current_user)
+
 # --- MODELOS MULTIUSUARIO / MULTIFAMILIA ---
 
 class Familia(db.Model):
