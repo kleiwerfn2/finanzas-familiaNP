@@ -30,7 +30,7 @@
                             <select class="form-select form-select-lg fs-6" name="categoria" required>
                                 <option value="" disabled selected>Categoría</option>
                                 {% for cat in categorias %}
-                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    <option value="{{ cat.nombre }}">{{ cat.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -38,7 +38,7 @@
                             <select class="form-select form-select-lg fs-6" name="medio_pago" required>
                                 <option value="" disabled selected>Medio Pago</option>
                                 {% for mp in medios_pago %}
-                                    <option value="{{ mp }}">{{ mp }}</option>
+                                    <option value="{{ mp.nombre }}">{{ mp.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -49,7 +49,7 @@
                         <select class="form-select form-select-lg fs-6" name="responsable" required>
                             <option value="" disabled selected>Responsable</option>
                             {% for resp in responsables %}
-                                <option value="{{ resp }}">{{ resp }}</option>
+                                <option value="{{ resp.nombre }}">{{ resp.nombre }}</option>
                             {% endfor %}
                         </select>
                     </div>

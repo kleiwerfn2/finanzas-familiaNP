@@ -54,6 +54,8 @@ class Familia(db.Model):
 
     usuarios = db.relationship('Usuario', backref='familia', lazy=True)
     miembros = db.relationship('MiembroFamilia', backref='familia', lazy=True, cascade="all, delete-orphan")
+    categorias = db.relationship('Categoria', backref='familia', lazy=True, cascade="all, delete-orphan")
+    medios_pago = db.relationship('MedioPago', backref='familia', lazy=True, cascade="all, delete-orphan")
     gastos = db.relationship('Gasto', backref='familia', lazy=True)
     recurrentes = db.relationship('GastoRecurrente', backref='familia', lazy=True)
 
@@ -76,6 +78,18 @@ class MiembroFamilia(db.Model):
     __tablename__ = 'miembro_familia'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=False)
+
+class Categoria(db.Model):
+    __tablename__ = 'categoria'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=False)
+
+class MedioPago(db.Model):
+    __tablename__ = 'medio_pago'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50), nullable=False)
     familia_id = db.Column(db.Integer, db.ForeignKey('familia.id'), nullable=False)
 
 class Gasto(db.Model):
@@ -218,22 +232,19 @@ def inject_alertas():
 
 # --- HELPER DE OPCIONES DE FORMULARIO ---
 def obtener_opciones():
-    cat_base = ["Supermercado", "Restaurante", "Alquiler", "Expensas", "Luz", "Gas", "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", "Vacaciones", "Fondo de Retiro", "Gastos Personales", "Cora", "Auto", "Varios", "combustible"]
-    medios_base = ["BBVA Master", "BBVA Visa", "Santander Visa", "Santander American", "Transferencia Galicia", "Transferencia Santander", "Transferencia BBVA", "Mercado Pago", "Efectivo"]
+    if not current_user.is_authenticated:
+        return {"categorias": [], "responsables": [], "medios_pago": []}
 
-    if current_user.is_authenticated:
-        miembros_db = [m.nombre for m in MiembroFamilia.query.filter_by(familia_id=current_user.familia_id).order_by(MiembroFamilia.nombre).all()]
-        cat_db = [c[0] for c in db.session.query(Gasto.categoria).filter_by(familia_id=current_user.familia_id).distinct().all() if c[0]]
-        medios_db = [m[0] for m in db.session.query(Gasto.medio_pago).filter_by(familia_id=current_user.familia_id).distinct().all() if m[0]]
-    else:
-        miembros_db = ["Joffan", "Dore"]
-        cat_db = []
-        medios_db = []
+    fid = current_user.familia_id
+
+    miembros = [m.nombre for m in MiembroFamilia.query.filter_by(familia_id=fid).order_by(MiembroFamilia.nombre).all()]
+    categorias = [c.nombre for c in Categoria.query.filter_by(familia_id=fid).order_by(Categoria.nombre).all()]
+    medios = [m.nombre for m in MedioPago.query.filter_by(familia_id=fid).order_by(MedioPago.nombre).all()]
 
     return {
-        "categorias": sorted(list(set(cat_base + cat_db))),
-        "responsables": miembros_db if miembros_db else ["Sin miembros"],
-        "medios_pago": sorted(list(set(medios_base + medios_db)))
+        "categorias": categorias,
+        "responsables": miembros if miembros else ["Sin miembros"],
+        "medios_pago": medios
     }
 
 def generar_codigo_invitacion(longitud=8):
@@ -271,58 +282,94 @@ def registro():
         return redirect(url_for('home'))
 
     if request.method == 'POST':
-        familia_nombre = request.form.get('familia_nombre')
-        nombre = request.form.get('nombre')
-        email = request.form.get('email')
+        tipo_registro = request.form.get('tipo_registro', 'crear')  # 'crear' o 'unirse'
+        nombre = request.form.get('nombre', '').strip()
+        email = request.form.get('email', '').strip()
         password = request.form.get('password')
-        miembros_input = request.form.get('miembros')
 
+        # Verificar si el correo ya existe
         if Usuario.query.filter_by(email=email).first():
             flash('El correo electrónico ya está registrado.', 'danger')
             return redirect(url_for('registro'))
 
-        # 1. Crear Familia con su código
-        codigo_nuevo = generar_codigo_invitacion()
-        while Familia.query.filter_by(codigo_invitacion=codigo_nuevo).first():
+        # LÓGICA DE UNIRSE A UNA FAMILIA EXISTENTE
+        if tipo_registro == 'unirse':
+            codigo = request.form.get('codigo_invitacion', '').strip().upper()
+            familia = Familia.query.filter_by(codigo_invitacion=codigo).first()
+            
+            if not familia:
+                flash('El código de invitación no es válido o no existe.', 'danger')
+                return redirect(url_for('registro'))
+
+        # LÓGICA DE CREAR NUEVA FAMILIA
+        else:
+            familia_nombre = request.form.get('familia_nombre') or f'Familia de {nombre}'
             codigo_nuevo = generar_codigo_invitacion()
+            while Familia.query.filter_by(codigo_invitacion=codigo_nuevo).first():
+                codigo_nuevo = generar_codigo_invitacion()
 
-        nueva_familia = Familia(nombre=familia_nombre, codigo_invitacion=codigo_nuevo)
-        db.session.add(nueva_familia)
-        db.session.flush()
+            familia = Familia(nombre=familia_nombre, codigo_invitacion=codigo_nuevo)
+            db.session.add(familia)
+            db.session.flush()
 
-        # 2. Crear Usuario
+            # Poblar Categorías Iniciales
+            cat_base = [
+                "Supermercado", "Restaurante", "Alquiler", "Expensas", "Luz", "Gas", 
+                "Internet", "Telefono", "Educación", "Deportes", "Transporte", "Salud", 
+                "Vacaciones", "Fondo de Retiro", "Gastos Personales", "Auto", "Varios", "Combustible"
+            ]
+            for cat_nombre in cat_base:
+                db.session.add(Categoria(nombre=cat_nombre, familia_id=familia.id))
+
+            # Poblar Medios de Pago Iniciales
+            medios_base = [
+                "BBVA Master", "BBVA Visa", "Santander Visa", "Santander American", 
+                "Transferencia Galicia", "Transferencia Santander", "Transferencia BBVA", 
+                "Mercado Pago", "Efectivo"
+            ]
+            for medio_nombre in medios_base:
+                db.session.add(MedioPago(nombre=medio_nombre, familia_id=familia.id))
+
+            # Agregar integrantes extra si fueron especificados
+            miembros_input = request.form.get('miembros')
+            if miembros_input:
+                lista = [m.strip() for m in miembros_input.split(',') if m.strip()]
+                for nombre_m in lista:
+                    if nombre_m.lower() != nombre.lower():
+                        db.session.add(MiembroFamilia(nombre=nombre_m, familia_id=familia.id))
+
+        # Crear Usuario asociado a la familia (nueva o existente)
         nuevo_usuario = Usuario(
             nombre=nombre,
             email=email,
             confirmado=False,
-            familia_id=nueva_familia.id
+            familia_id=familia.id
         )
         nuevo_usuario.set_password(password)
         db.session.add(nuevo_usuario)
 
-        # 3. Registrar el Creador como primer Miembro Responsable
-        db.session.add(MiembroFamilia(nombre=nombre, familia_id=nueva_familia.id))
-
-        # 4. Registrar Integrantes Adicionales
-        if miembros_input:
-            lista = [m.strip() for m in miembros_input.split(',') if m.strip()]
-            for nombre_m in lista:
-                if nombre_m.lower() != nombre.lower():
-                    db.session.add(MiembroFamilia(nombre=nombre_m, familia_id=nueva_familia.id))
+        # Registrar al usuario como Miembro/Responsable si no figura ya
+        miembro_existente = MiembroFamilia.query.filter_by(nombre=nombre, familia_id=familia.id).first()
+        if not miembro_existente:
+            db.session.add(MiembroFamilia(nombre=nombre, familia_id=familia.id))
 
         db.session.commit()
 
-        # 5. Enviar Correo de Confirmación
+        # Enviar Correo de Confirmación
         try:
             token = serializer.dumps(email, salt='email-confirm-salt')
             confirm_url = url_for('confirmar_email', token=token, _external=True)
 
             msg = Message('Confirma tu cuenta - Finanzas Familiares', recipients=[email])
-            msg.body = f'¡Hola {nombre}!\n\nConfirma tu registro ingresando al siguiente enlace:\n{confirm_url}\n\nTu código de invitación familiar es: {codigo_nuevo}'
+            msg.body = (
+                f'¡Hola {nombre}!\n\n'
+                f'Confirma tu registro ingresando al siguiente enlace:\n{confirm_url}\n\n'
+                f'Tu código de invitación familiar es: {familia.codigo_invitacion}'
+            )
             mail.send(msg)
             flash('Registro creado. Te hemos enviado un correo de confirmación a tu e-mail.', 'info')
         except Exception as e:
-            # Fallback en caso de no tener configurado SMTP
+            # Fallback en caso de no tener configurado servidor SMTP
             nuevo_usuario.confirmado = True
             db.session.commit()
             flash('Registro exitoso. Tu cuenta ha sido activada automáticamente.', 'success')
@@ -742,6 +789,76 @@ def carga_rapida():
         categorias=opciones["categorias"],
         responsables=opciones["responsables"],
         medios_pago=opciones["medios_pago"]
+    )
+
+@app.route('/opciones', methods=['GET', 'POST'])
+@login_required
+def opciones():
+    fid = current_user.familia_id
+
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        
+        # Categorías
+        if accion == 'agregar_categoria':
+            nombre = request.form.get('nombre').strip()
+            if nombre and not Categoria.query.filter_by(nombre=nombre, familia_id=fid).first():
+                db.session.add(Categoria(nombre=nombre, familia_id=fid))
+                db.session.commit()
+                flash('Categoría agregada correctamente.', 'success')
+
+        elif accion == 'eliminar_categoria':
+            cat_id = request.form.get('id')
+            cat = Categoria.query.filter_by(id=cat_id, familia_id=fid).first()
+            if cat:
+                db.session.delete(cat)
+                db.session.commit()
+                flash('Categoría eliminada.', 'info')
+
+        # Medios de Pago
+        elif accion == 'agregar_medio':
+            nombre = request.form.get('nombre').strip()
+            if nombre and not MedioPago.query.filter_by(nombre=nombre, familia_id=fid).first():
+                db.session.add(MedioPago(nombre=nombre, familia_id=fid))
+                db.session.commit()
+                flash('Medio de pago agregado correctamente.', 'success')
+
+        elif accion == 'eliminar_medio':
+            medio_id = request.form.get('id')
+            medio = MedioPago.query.filter_by(id=medio_id, familia_id=fid).first()
+            if medio:
+                db.session.delete(medio)
+                db.session.commit()
+                flash('Medio de pago eliminado.', 'info')
+
+        # Miembros
+        elif accion == 'agregar_miembro':
+            nombre = request.form.get('nombre').strip()
+            if nombre and not MiembroFamilia.query.filter_by(nombre=nombre, familia_id=fid).first():
+                db.session.add(MiembroFamilia(nombre=nombre, familia_id=fid))
+                db.session.commit()
+                flash('Miembro agregado correctamente.', 'success')
+
+        elif accion == 'eliminar_miembro':
+            m_id = request.form.get('id')
+            m = MiembroFamilia.query.filter_by(id=m_id, familia_id=fid).first()
+            if m:
+                db.session.delete(m)
+                db.session.commit()
+                flash('Miembro eliminado.', 'info')
+
+        return redirect(url_for('opciones'))
+
+    categorias = Categoria.query.filter_by(familia_id=fid).order_by(Categoria.nombre).all()
+    medios_pago = MedioPago.query.filter_by(familia_id=fid).order_by(MedioPago.nombre).all()
+    miembros = MiembroFamilia.query.filter_by(familia_id=fid).order_by(MiembroFamilia.nombre).all()
+
+    return render_template(
+        'opciones.html',
+        categorias=categorias,
+        medios_pago=medios_pago,
+        miembros=miembros,
+        codigo_invitacion=current_user.familia.codigo_invitacion
     )
 
 if __name__ == "__main__":

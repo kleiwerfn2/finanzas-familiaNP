@@ -4,67 +4,70 @@
 
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow-lg">
+        <div class="card shadow-lg border-0 rounded-4">
 
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">
+            <div class="card-header text-white" style="background: linear-gradient(135deg, #1e3a5f 0%, #2a5298 100%);">
+                <h4 class="mb-0 fw-bold">
                     {% if gasto %}✏️ Editar Gasto{% else %}💰 Registrar Gasto{% endif %}
-                </h3>
+                </h4>
             </div>
 
-            <div class="card-body">
+            <div class="card-body p-4">
                 <form method="POST">
 
                     <div class="mb-3">
-                        <label class="form-label">Fecha</label>
-                        <input type="date" class="form-control" name="fecha" value="{{ gasto.fecha if gasto else '' }}" required>
+                        <label class="form-label fw-semibold text-secondary">Fecha</label>
+                        <input type="date" class="form-control bg-light" name="fecha" value="{{ gasto.fecha if gasto else '' }}" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Descripción</label>
-                        <input type="text" class="form-control" name="descripcion" value="{{ gasto.descripcion if gasto else '' }}" placeholder="Ej: Compras del supermercado" required>
+                        <label class="form-label fw-semibold text-secondary">Descripción</label>
+                        <input type="text" class="form-control bg-light" name="descripcion" value="{{ gasto.descripcion if gasto else '' }}" placeholder="Ej: Compras del supermercado" required>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Monto</label>
-                        <input type="number" step="0.01" class="form-control" name="monto" value="{{ gasto.monto if gasto else '' }}" placeholder="0.00" required>
+                        <label class="form-label fw-semibold text-secondary">Monto</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted">$</span>
+                            <input type="number" step="0.01" class="form-control bg-light" name="monto" value="{{ gasto.monto if gasto else '' }}" placeholder="0.00" required>
+                        </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Categoría</label>
-                        <select class="form-select" name="categoria" required>
+                        <label class="form-label fw-semibold text-secondary">Categoría</label>
+                        <select class="form-select bg-light" name="categoria" required>
                             <option value="" disabled {% if not gasto %}selected{% endif %}>Seleccione una categoría...</option>
                             {% for cat in categorias %}
-                                <option value="{{ cat }}" {% if gasto and gasto.categoria == cat %}selected{% endif %}>{{ cat }}</option>
+                                <option value="{{ cat.nombre }}" {% if gasto and gasto.categoria == cat.nombre %}selected{% endif %}>{{ cat.nombre }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Responsable</label>
-                        <select class="form-select" name="responsable" required>
+                        <label class="form-label fw-semibold text-secondary">Responsable</label>
+                        <select class="form-select bg-light" name="responsable" required>
                             <option value="" disabled {% if not gasto %}selected{% endif %}>Seleccione un responsable...</option>
                             {% for resp in responsables %}
-                                <option value="{{ resp }}" {% if gasto and gasto.responsable == resp %}selected{% endif %}>{{ resp }}</option>
+                                <option value="{{ resp.nombre }}" {% if gasto and gasto.responsable == resp.nombre %}selected{% endif %}>{{ resp.nombre }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Medio de Pago</label>
-                        <select class="form-select" name="medio_pago" required>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-secondary">Medio de Pago</label>
+                        <select class="form-select bg-light" name="medio_pago" required>
                             <option value="" disabled {% if not gasto %}selected{% endif %}>Seleccione un medio de pago...</option>
                             {% for mp in medios_pago %}
-                                <option value="{{ mp }}" {% if gasto and gasto.medio_pago == mp %}selected{% endif %}>{{ mp }}</option>
+                                <option value="{{ mp.nombre }}" {% if gasto and gasto.medio_pago == mp.nombre %}selected{% endif %}>{{ mp.nombre }}</option>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
-                        <a href="{{ url_for('listar_gastos') }}" class="btn btn-secondary">
+                        <a href="{{ url_for('listar_gastos') }}" class="btn btn-outline-secondary fw-bold px-4">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm" style="background-color: #1e3a5f; border: none;">
                             {% if gasto %}Guardar Cambios{% else %}Guardar Gasto{% endif %}
                         </button>
                     </div>

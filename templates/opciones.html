@@ -2,8 +2,22 @@
 
 {% block contenido %}
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="h3 fw-bold mb-0">⚙️ Parámetros del Sistema</h1>
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold mb-0">⚙️ Parámetros de la Familia</h1>
+</div>
+
+<!-- TARJETA DE CÓDIGO DE INVITACIÓN -->
+<div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div>
+            <h6 class="fw-bold mb-1">🔑 Código de Invitación Familiar</h6>
+            <p class="text-muted small mb-0">Comparte este código para que otros miembros se unan a tu familia al registrarse.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary fs-6 px-3 py-2" id="codigoFamilia">{{ codigo_invitacion }}</span>
+            <button class="btn btn-outline-secondary btn-sm" onclick="copiarCodigo()" title="Copiar código">📋 Copiar</button>
+        </div>
+    </div>
 </div>
 
 <div class="row g-3">
@@ -16,7 +30,7 @@
             </div>
             <div class="card-body p-3">
                 <form method="POST" class="d-flex gap-2 mb-3">
-                    <input type="hidden" name="tipo" value="categoria">
+                    <input type="hidden" name="accion" value="agregar_categoria">
                     <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nueva categoría..." required>
                     <button type="submit" class="btn btn-sm btn-success fw-bold px-3">➕</button>
                 </form>
@@ -24,7 +38,12 @@
                 <ul class="list-group list-group-flush border-top">
                     {% for cat in categorias %}
                         <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center fs-7">
-                            <span>{{ cat }}</span>
+                            <span>{{ cat.nombre }}</span>
+                            <form method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta categoría?');">
+                                <input type="hidden" name="accion" value="eliminar_categoria">
+                                <input type="hidden" name="id" value="{{ cat.id }}">
+                                <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Eliminar">🗑️</button>
+                            </form>
                         </li>
                     {% else %}
                         <li class="list-group-item px-0 py-2 text-muted small text-center">Sin categorías guardadas</li>
@@ -34,27 +53,32 @@
         </div>
     </div>
 
-    <!-- RESPONSABLES -->
+    <!-- RESPONSABLES (MIEMBROS) -->
     <div class="col-12 col-md-4">
         <div class="card shadow-sm border-0 h-100">
             <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center py-2">
-                <h6 class="mb-0 fw-bold">👤 Responsables</h6>
-                <span class="badge bg-white text-secondary rounded-pill">{{ responsables | length }}</span>
+                <h6 class="mb-0 fw-bold">👤 Miembros / Responsables</h6>
+                <span class="badge bg-white text-secondary rounded-pill">{{ miembros | length }}</span>
             </div>
             <div class="card-body p-3">
                 <form method="POST" class="d-flex gap-2 mb-3">
-                    <input type="hidden" name="tipo" value="responsable">
-                    <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nuevo responsable..." required>
+                    <input type="hidden" name="accion" value="agregar_miembro">
+                    <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nuevo integrante..." required>
                     <button type="submit" class="btn btn-sm btn-success fw-bold px-3">➕</button>
                 </form>
 
                 <ul class="list-group list-group-flush border-top">
-                    {% for resp in responsables %}
+                    {% for m in miembros %}
                         <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center fs-7">
-                            <span>{{ resp }}</span>
+                            <span>{{ m.nombre }}</span>
+                            <form method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este integrante?');">
+                                <input type="hidden" name="accion" value="eliminar_miembro">
+                                <input type="hidden" name="id" value="{{ m.id }}">
+                                <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Eliminar">🗑️</button>
+                            </form>
                         </li>
                     {% else %}
-                        <li class="list-group-item px-0 py-2 text-muted small text-center">Sin responsables guardados</li>
+                        <li class="list-group-item px-0 py-2 text-muted small text-center">Sin miembros guardados</li>
                     {% endfor %}
                 </ul>
             </div>
@@ -70,7 +94,7 @@
             </div>
             <div class="card-body p-3">
                 <form method="POST" class="d-flex gap-2 mb-3">
-                    <input type="hidden" name="tipo" value="medio_pago">
+                    <input type="hidden" name="accion" value="agregar_medio">
                     <input type="text" name="nombre" class="form-control form-control-sm" placeholder="Nuevo medio de pago..." required>
                     <button type="submit" class="btn btn-sm btn-success fw-bold px-3">➕</button>
                 </form>
@@ -78,7 +102,12 @@
                 <ul class="list-group list-group-flush border-top">
                     {% for med in medios_pago %}
                         <li class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center fs-7">
-                            <span>{{ med }}</span>
+                            <span>{{ med.nombre }}</span>
+                            <form method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este medio de pago?');">
+                                <input type="hidden" name="accion" value="eliminar_medio">
+                                <input type="hidden" name="id" value="{{ med.id }}">
+                                <button type="submit" class="btn btn-link text-danger p-0 border-0" title="Eliminar">🗑️</button>
+                            </form>
                         </li>
                     {% else %}
                         <li class="list-group-item px-0 py-2 text-muted small text-center">Sin medios de pago guardados</li>
@@ -88,5 +117,14 @@
         </div>
     </div>
 </div>
+
+<script>
+function copiarCodigo() {
+    const codigo = document.getElementById("codigoFamilia").innerText;
+    navigator.clipboard.writeText(codigo).then(() => {
+        alert("¡Código copiado al portapapeles: " + codigo + "!");
+    });
+}
+</script>
 
 {% endblock %}

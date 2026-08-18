@@ -11,13 +11,13 @@
             <div class="p-4 text-center text-white" style="background: linear-gradient(135deg, #1e3a5f 0%, #2a5298 100%);">
                 <div class="display-5 mb-1">🏠</div>
                 <h4 class="fw-bold mb-0">Crear Cuenta Familiar</h4>
-                <small class="opacity-75">Registra tu familia para empezar a gestionar tus gastos</small>
+                <small class="opacity-75">Registra tu familia o únete a una existente</small>
             </div>
 
             <!-- Cuerpo del Formulario -->
             <div class="card-body p-4 bg-white">
 
-                <!-- Mensajes Flash (Errores/Éxitos) -->
+                <!-- Mensajes Flash -->
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -31,25 +31,55 @@
 
                 <form method="POST" action="{{ url_for('registro') }}" autocomplete="off">
                     
-                    <!-- Nombre de la Familia -->
-                    <div class="mb-3">
-                        <label for="familia_nombre" class="form-label text-secondary fw-semibold">Nombre de la Familia</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted">👨‍👩‍👧‍👦</span>
-                            <input type="text" class="form-control bg-light border-start-0" id="familia_nombre" name="familia_nombre" placeholder="Ej: Familia Pérez" required autofocus>
+                    <!-- Selector de Modo: Crear vs Unirme -->
+                    <div class="mb-4 text-center">
+                        <label class="form-label text-secondary fw-semibold d-block mb-2">¿Qué deseas hacer?</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="tipo_registro" id="tipoCrear" value="crear" checked onclick="toggleModo('crear')">
+                            <label class="btn btn-outline-primary fw-semibold py-2" for="tipoCrear">Crear Familia</label>
+
+                            <input type="radio" class="btn-check" name="tipo_registro" id="tipoUnirse" value="unirse" onclick="toggleModo('unirse')">
+                            <label class="btn btn-outline-primary fw-semibold py-2" for="tipoUnirse">Unirme a Familia</label>
                         </div>
                     </div>
 
-                    <!-- Integrantes de la Familia -->
-                    <div class="mb-3">
-                        <label for="miembros" class="form-label text-secondary fw-semibold">Miembros / Integrantes de la familia</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted">👥</span>
-                            <input type="text" class="form-control bg-light border-start-0" id="miembros" name="miembros" placeholder="Ej: María, Diego, Mateo">
+                    <!-- CAMPOS EXCLUSIVOS: CREAR FAMILIA -->
+                    <div id="seccionCrear">
+                        <!-- Nombre de la Familia -->
+                        <div class="mb-3">
+                            <label for="familia_nombre" class="form-label text-secondary fw-semibold">Nombre de la Familia</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">👨‍👩‍👧‍👦</span>
+                                <input type="text" class="form-control bg-light border-start-0" id="familia_nombre" name="familia_nombre" placeholder="Ej: Familia Pérez" required>
+                            </div>
                         </div>
-                        <small class="text-muted fs-7">Escribe los nombres separados por coma. Serán los responsables de los gastos.</small>
+
+                        <!-- Integrantes de la Familia -->
+                        <div class="mb-3">
+                            <label for="miembros" class="form-label text-secondary fw-semibold">Otros Integrantes <span class="text-muted fw-normal">(Opcional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">👥</span>
+                                <input type="text" class="form-control bg-light border-start-0" id="miembros" name="miembros" placeholder="Ej: María, Diego, Mateo">
+                            </div>
+                            <small class="text-muted fs-7">Nombres separados por coma. Serán responsables de gastos.</small>
+                        </div>
                     </div>
 
+                    <!-- CAMPOS EXCLUSIVOS: UNIRSE A FAMILIA -->
+                    <div id="seccionUnirse" class="d-none">
+                        <div class="mb-3">
+                            <label for="codigo_invitacion" class="form-label text-secondary fw-semibold">Código de Invitación Familiar</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted">🔑</span>
+                                <input type="text" class="form-control bg-light border-start-0 text-uppercase fw-bold" id="codigo_invitacion" name="codigo_invitacion" placeholder="Ej: FAM-A1B2C3" style="letter-spacing: 2px;">
+                            </div>
+                            <small class="text-muted fs-7">Pídele este código al creador de la familia (está en Opciones).</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 text-muted opacity-25">
+
+                    <!-- DATOS PERSONALES DEL USUARIO -->
                     <!-- Nombre del Usuario -->
                     <div class="mb-3">
                         <label for="nombre" class="form-label text-secondary fw-semibold">Tu Nombre</label>
@@ -101,4 +131,25 @@
 
     </div>
 </div>
+
+<script>
+function toggleModo(modo) {
+    const seccionCrear = document.getElementById('seccionCrear');
+    const seccionUnirse = document.getElementById('seccionUnirse');
+    const inputFamilia = document.getElementById('familia_nombre');
+    const inputCodigo = document.getElementById('codigo_invitacion');
+
+    if (modo === 'crear') {
+        seccionCrear.classList.remove('d-none');
+        seccionUnirse.classList.add('d-none');
+        inputFamilia.setAttribute('required', 'required');
+        inputCodigo.removeAttribute('required');
+    } else {
+        seccionCrear.classList.add('d-none');
+        seccionUnirse.classList.remove('d-none');
+        inputCodigo.setAttribute('required', 'required');
+        inputFamilia.removeAttribute('required');
+    }
+}
+</script>
 {% endblock %}
